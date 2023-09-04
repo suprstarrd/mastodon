@@ -32,7 +32,6 @@ class AdvancedTextFormatter < TextFormatter
   def initialize(text, options = {})
     @content_type = options.delete(:content_type)
     super(text, options)
-
     @text = format_markdown(text) if content_type == 'text/markdown'
   end
 
@@ -98,6 +97,11 @@ class AdvancedTextFormatter < TextFormatter
   private
 
   def format_markdown(html)
+    pinktext = html.scan(/(\n|^)(>[^\s].*(?:\n>[^\s].*)*)/)
+    pinktext.each do |match|
+      new_content = match[1].gsub("\n", '<br/>')
+      html = html.sub(match[1], "<font color=\"#e574ff\">#{new_content}</font>")
+    end
     html = markdown_formatter.render(html)
     html.delete("\r").delete("\n")
   end
