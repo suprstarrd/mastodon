@@ -1,3 +1,14 @@
+# Besties mastodon
+
+A fork of a fork of a fork
+
+Adds:
+
+- Pinktext
+- Besties favicon
+
+---
+
 # <img src="https://github.com/TheEssem/mastodon/raw/main/app/javascript/icons/android-chrome-256x256.png" width="128"> Chuckya
 
 This is a custom branch of Mastodon/glitch-soc intended for usage on the [wetdry.world](https://wetdry.world) instance.
