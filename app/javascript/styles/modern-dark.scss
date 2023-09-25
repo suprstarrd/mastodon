@@ -4,3 +4,87 @@
 @import 'mastodon/variables';
 @import 'application';
 @import 'modern/style';
+
+:root {
+  --accent-clr: #8c8dff;
+  --accent-deep-clr: #5455ff;
+  --bg-primary: #15171c;
+  --bg-secondary: #1d2026;
+  --bg-tertiary: #101115;
+  --bg-quaternary: #0e0f13;
+  --bg-selected: #1c1f26;
+}
+
+body {
+  background-color: var(--bg-quaternary);
+  font-family: 'DM Sans', mastodon-font-sans-serif, sans-serif;
+}
+
+.column-header,
+.column-header__back-button,
+.column-header__button,
+.search__input:focus {
+  background-color: var(--bg-primary);
+}
+
+.search__input {
+  background-color: var(--bg-secondary);
+}
+
+.column > .scrollable {
+  background-color: var(--bg-primary);
+}
+
+.account__section-headline button,
+.notification__filter-bar button {
+  background: none;
+}
+
+.account__section-headline a.active::after,
+.account__section-headline button.active::after,
+.notification__filter-bar a.active::after,
+.notification__filter-bar button.active::after {
+  border-color: transparent transparent var(--bg-secondary);
+}
+
+.account__section-headline,
+.notification__filter-bar {
+  background-color: var(--bg-tertiary);
+}
+
+.detailed-status,
+.detailed-status__action-bar {
+  background-color: var(--bg-primary);
+}
+
+.status__avatar {
+  box-shadow: none;
+}
+
+.status.collapsed .status__content::after {
+  background: linear-gradient(rgba(40, 44, 55, 0%), var(--bg-secondary));
+}
+
+.tabs-bar__wrapper {
+  background: var(--bg-quaternary);
+}
+
+.explore__search-header {
+  background-color: var(--bg-primary);
+}
+
+.dismissable-banner {
+  background-color: var(--bg-primary);
+}
+
+.empty-column-indicator,
+.follow_requests-unlocked_explanation {
+  background: var(--bg-primary);
+}
+
+.focusable:focus,
+.focusable:focus .detailed-status,
+.focusable:focus .detailed-status__action-bar,
+.focusable:focus.status.status-direct.muted {
+  background-color: var(--bg-selected);
+}
