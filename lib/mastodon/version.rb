@@ -25,7 +25,7 @@ module Mastodon
     end
 
     def build_metadata
-      ['chuckya', ENV.fetch('MASTODON_VERSION_METADATA', nil)].compact_blank.join('.')
+      ['besties', ENV.fetch('MASTODON_VERSION_METADATA', nil)].compact_blank.join('.')
     end
 
     def to_a
@@ -44,11 +44,11 @@ module Mastodon
     end
 
     def repository
-      ENV.fetch('GITHUB_REPOSITORY', 'TheEssem/mastodon')
+      ENV.fetch('GITHUB_REPOSITORY', 'besties/mastodon')
     end
 
     def source_base_url
-      ENV.fetch('SOURCE_BASE_URL', "https://github.com/#{repository}")
+      ENV.fetch('SOURCE_BASE_URL', "https://git.gay/#{repository}")
     end
 
     # specify git tag or commit hash here
