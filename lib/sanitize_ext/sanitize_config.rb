@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../misskey_flavored_markdown'
+
 class Sanitize
   module Config
     HTTP_PROTOCOLS = %w(
@@ -21,27 +23,6 @@ class Sanitize
       gemini
     ).freeze
 
-    # Swap <span style="color: red;"> for <font color="red">
-    STYLE_TRANSFORMER = lambda do |env|
-      node = env[:node]
-      style_list = node['style']&.gsub(%r:{/*}.*?{*/}:s, '')&.split(';')
-
-      return unless style_list
-
-      color = nil
-
-      style_list.each do |style|
-        next unless /\s*color\s*:/.match?(style)
-
-        color = style.match(/color\s*:\s*(.*?)\s*$/s)[1]
-      end
-
-      return unless color
-
-      node.name = 'font'
-      node['color'] = color
-    end
-
     CLASS_WHITELIST_TRANSFORMER = lambda do |env|
       node = env[:node]
       class_list = node['class']&.split(/[\t\n\f\r ]/)
@@ -52,6 +33,7 @@ class Sanitize
         next true if /^(h|p|u|dt|e)-/.match?(e) # microformats classes
         next true if /^(mention|hashtag)$/.match?(e) # semantic classes
         next true if /^(ellipsis|invisible)$/.match?(e) # link formatting classes
+        next true if /^mfm(-[\w\d]+)?$/.match?(e) # misskey flavored markdown classes
       end
 
       node['class'] = class_list.join(' ')
@@ -125,7 +107,7 @@ class Sanitize
       },
 
       transformers: [
-        STYLE_TRANSFORMER,
+        MisskeyFlavoredMarkdown::MFM_TRANSFORMER,
         CLASS_WHITELIST_TRANSFORMER,
         IMG_TAG_TRANSFORMER,
         TRANSLATE_TRANSFORMER,
@@ -190,7 +172,6 @@ class Sanitize
       add_attributes: {},
 
       transformers: [
-        STYLE_TRANSFORMER,
         CLASS_WHITELIST_TRANSFORMER,
         IMG_TAG_TRANSFORMER,
         TRANSLATE_TRANSFORMER,
