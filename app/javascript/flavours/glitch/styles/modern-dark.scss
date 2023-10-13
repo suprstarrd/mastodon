@@ -85,3 +85,28 @@ body {
 .focusable:focus.status.status-direct.muted {
   background-color: var(--bg-selected);
 }
+
+@media (width >= 1175px) {
+  .layout-single-column
+    .column-back-button--slim
+    .column-back-button:not(.column-back-button)::after,
+  .layout-single-column .tabs-bar__wrapper:not(.column-back-button)::after {
+    background: var(--bg-quaternary, #191b22);
+  }
+
+  .layout-single-column
+    .column-back-button--slim
+    .column-back-button:not(.column-back-button)::before,
+  .layout-single-column .tabs-bar__wrapper:not(.column-back-button)::before {
+    background: var(--bg-secondary, #17191f);
+  }
+}
+@media (width <= 889px) {
+  .layout-single-column .ui__header {
+    background-color: var(--bg-secondary);
+  }
+
+  #mastodon .columns-area__panels__pane--navigational .navigation-panel {
+    background-color: var(--bg-secondary);
+  }
+}
