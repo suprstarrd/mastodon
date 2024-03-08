@@ -57,7 +57,7 @@
         border-radius: 4px;
         @include avatar-radius;
 
-        background: darken($ui-base-color, 8%);
+        background: $ui-background-color;
         object-fit: cover;
       }
     }
@@ -294,7 +294,7 @@
     width: 120px;
     flex: 0 0 auto;
     color: $secondary-text-color;
-    background: rgba(darken($ui-base-color, 8%), 0.5);
+    background: rgba($ui-background-color, 0.5);
   }
 
   dd {
