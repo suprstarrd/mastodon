@@ -8,45 +8,12 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
 
     dereference_object!
 
-    case @object['type']
-    when 'EncryptedMessage'
-      create_encrypted_message
-    else
-      create_status
-    end
+    create_status
   rescue Mastodon::RejectPayload
     reject_payload!
   end
 
   private
-
-  def create_encrypted_message
-    return reject_payload! if non_matching_uri_hosts?(@account.uri, object_uri) || @options[:delivered_to_account_id].blank?
-
-    target_account = Account.find(@options[:delivered_to_account_id])
-    target_device  = target_account.devices.find_by(device_id: @object.dig('to', 'deviceId'))
-
-    return if target_device.nil?
-
-    target_device.encrypted_messages.create!(
-      from_account: @account,
-      from_device_id: @object.dig('attributedTo', 'deviceId'),
-      type: @object['messageType'],
-      body: @object['cipherText'],
-      digest: @object.dig('digest', 'digestValue'),
-      message_franking: message_franking.to_token
-    )
-  end
-
-  def message_franking
-    MessageFranking.new(
-      hmac: @object.dig('digest', 'digestValue'),
-      original_franking: @object['messageFranking'],
-      source_account_id: @account.id,
-      target_account_id: @options[:delivered_to_account_id],
-      timestamp: Time.now.utc
-    )
-  end
 
   def reject_pattern?
     Setting.reject_pattern.present? && @object['content']&.match?(Setting.reject_pattern)
@@ -81,12 +48,13 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
   def process_status
     @tags                 = []
     @mentions             = []
+    @unresolved_mentions  = []
     @silenced_account_ids = []
     @params               = {}
 
     process_status_params
 
-    raise Mastodon::RejectPayload if MediaAttachment.where(id: @params[:media_attachment_ids]).where(blurhash: Setting.reject_blurhash.split(/\r?\n/).filter(&:present?).uniq).present?
+    return reject_payload! if MediaAttachment.where(id: @params[:media_attachment_ids]).where(blurhash: Setting.reject_blurhash.split(/\r?\n/).compact_blank.uniq).present?
 
     process_tags
     process_audience
@@ -100,6 +68,7 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     end
 
     resolve_thread(@status)
+    resolve_unresolved_mentions(@status)
     fetch_replies(@status)
     distribute
     forward_for_reply
@@ -242,6 +211,8 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     return if account.nil?
 
     @mentions << Mention.new(account: account, silent: false)
+  rescue Mastodon::UnexpectedResponseError, HTTP::TimeoutError, HTTP::ConnectionError, OpenSSL::SSL::SSLError
+    @unresolved_mentions << tag['href']
   end
 
   def process_emoji(tag)
@@ -346,15 +317,23 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     ThreadResolveWorker.perform_async(status.id, in_reply_to_uri, { 'request_id' => @options[:request_id] })
   end
 
+  def resolve_unresolved_mentions(status)
+    @unresolved_mentions.uniq.each do |uri|
+      MentionResolveWorker.perform_in(rand(30...600).seconds, status.id, uri, { 'request_id' => @options[:request_id] })
+    end
+  end
+
   def fetch_replies(status)
     collection = @object['replies']
-    return if collection.nil?
+    return if collection.blank?
 
     replies = ActivityPub::FetchRepliesService.new.call(status, collection, allow_synchronous_requests: false, request_id: @options[:request_id])
     return unless replies.nil?
 
     uri = value_or_id(collection)
     ActivityPub::FetchRepliesWorker.perform_async(status.id, uri, { 'request_id' => @options[:request_id] }) unless uri.nil?
+  rescue => e
+    Rails.logger.warn "Error fetching replies: #{e}"
   end
 
   def conversation_from_uri(uri)
@@ -385,7 +364,15 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
   end
 
   def converted_text
-    linkify([@status_parser.title.presence, @status_parser.spoiler_text.presence, @status_parser.url || @status_parser.uri].compact.join("\n\n"))
+    [formatted_title, @status_parser.spoiler_text.presence, formatted_url].compact.join("\n\n")
+  end
+
+  def formatted_title
+    "<h2>#{@status_parser.title}</h2>" if @status_parser.title.present?
+  end
+
+  def formatted_url
+    linkify(@status_parser.url || @status_parser.uri)
   end
 
   def unsupported_media_type?(mime_type)
