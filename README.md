@@ -16,6 +16,7 @@ Chuckya is a close-to-upstream soft fork of Mastodon Glitch Edition (more common
 Here are some of the changes compared to glitch-soc:
 
 - Emoji reactions (glitch-soc/mastodon#2462)
+- Bubble timeline
 - Tenor GIF picker (originally from [koyu.space](https://github.com/koyuspace/mastodon))
 - Mastodon Modern theme (licensed under CC-BY-SA 4.0, [original repo](https://git.gay/freeplay/Mastodon-Modern))
 - Workaround for OpenGraph video embeds when using [Jortage](https://jortage.com)
@@ -122,7 +123,7 @@ Mastodon acts as an OAuth2 provider, so 3rd party apps can use the REST and Stre
 
 - **PostgreSQL** 12+
 - **Redis** 4+
-- **Ruby** 3.1+
+- **Ruby** 3.2+
 - **Node.js** 18+
 
 The repository includes deployment configurations for **Docker and docker-compose** as well as specific platforms like **Heroku**, and **Scalingo**. For Helm charts, reference the [mastodon/chart repository](https://github.com/mastodon/chart). The [**standalone** installation guide](https://docs.joinmastodon.org/admin/install/) is available in the documentation.
