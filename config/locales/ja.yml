@@ -211,6 +211,7 @@ ja:
         enable_user: ユーザーを有効化
         memorialize_account: 追悼アカウント化
         promote_user: ユーザーを昇格
+        publish_terms_of_service: サービス利用規約を公開
         reject_appeal: 抗議を却下
         reject_user: ユーザーを拒否
         remove_avatar_user: アイコンを削除
@@ -275,6 +276,7 @@ ja:
         enable_user_html: "%{name}さんが%{target}さんのログインを有効化しました"
         memorialize_account_html: "%{name}さんが%{target}さんを追悼アカウントページに登録しました"
         promote_user_html: "%{name}さんが%{target}さんを昇格しました"
+        publish_terms_of_service_html: "%{name} がサービス利用規約の更新を公開しました"
         reject_appeal_html: "%{name}さんが%{target}からの抗議を却下しました"
         reject_user_html: "%{name}さんが%{target}さんからの登録を拒否しました"
         remove_avatar_user_html: "%{name}さんが%{target}さんのアイコンを削除しました"
@@ -304,6 +306,7 @@ ja:
       title: 操作履歴
       unavailable_instance: "(ドメイン名が利用できません)"
     announcements:
+      back: アナウンスに戻る
       destroyed_msg: お知らせが削除されました
       edit:
         title: お知らせを編集
@@ -312,6 +315,10 @@ ja:
       new:
         create: お知らせを作成
         title: お知らせを追加
+      preview:
+        disclaimer: メール通知はユーザーがオプトアウトできないため、個人データの漏洩やサーバー閉鎖の通知など重要なアナウンスに限定されるべきです。
+        explanation_html: このメールは<strong>%{display_count}ユーザー</strong>へ送られます。次の文章がメールに含まれます：
+        title: アナウンスの通知のプレビュー
       publish: 公開する
       published_msg: お知らせを掲載しました
       scheduled_for: "%{time}に予約"
@@ -465,6 +472,36 @@ ja:
       new:
         title: ドメインブロックをインポート
       no_file: ファイルが選択されていません
+    fasp:
+      debug:
+        callbacks:
+          created_at: 作成元
+          delete: 削除
+          ip: IPアドレス
+          request_body: リクエスト本文
+          title: デバッグ　コールバック
+      providers:
+        active: アクティブ
+        base_url: 基本URL
+        callback: コールバック
+        delete: 削除
+        edit: プロバイダーの編集
+        finish_registration: 登録を完了
+        name: 名前
+        providers: プロバイダ
+        public_key_fingerprint: 公開キーのフィンガープリント
+        registration_requested: 登録がリクエストされました
+        registrations:
+          confirm: 確定
+          description: FASPから登録を受け取りました。自分で登録していないなら拒否してください。自分で登録した場合は、登録を確定する前に名前と鍵のフィンガープリントを慎重に比較してください。
+          reject: 拒否
+          title: FASP登録を確認
+        save: 保存
+        select_capabilities: 機能選択
+        sign_in: サインイン
+        status: ステータス
+        title: フェディバース補助サービスプロバイダ
+      title: FASP
     follow_recommendations:
       description_html: "<strong>おすすめフォローは、新規ユーザーが興味のあるコンテンツをすばやく見つけるのに役立ちます。</strong>ユーザーが他のユーザーとの交流を十分にしていない場合、パーソナライズされたおすすめフォローを生成する代わりに、これらのアカウントが表示されます。最近のエンゲージメントが最も高いアカウントと、特定の言語のローカルフォロワー数が最も多いアカウントを組み合わせて､毎日再計算されます。"
       language: 言語
@@ -507,7 +544,7 @@ ja:
         instance_accounts_dimension: 最もフォローされているアカウント
         instance_accounts_measure: 保存されたアカウント
         instance_followers_measure: そこでの我々のフォロワー
-        instance_follows_measure: リモートフォローしているアカウント
+        instance_follows_measure: こちらからのフォロー数
         instance_languages_dimension: 人気の言語
         instance_media_attachments_measure: 保存されたメディア
         instance_reports_measure: 通報
@@ -767,7 +804,6 @@ ja:
         preamble: Mastodon を知らないユーザーを取り込むには、興味深いコンテンツを浮上させることが重要です。サーバー上で様々なディスカバリー機能がどのように機能するかを制御します。
         profile_directory: ディレクトリ
         public_timelines: 公開タイムライン
-        publish_discovered_servers: 接続しているサーバーを公開する
         publish_statistics: 統計情報を公開する
         title: 見つける
         trends: トレンド
@@ -784,13 +820,13 @@ ja:
           approved: 登録には承認が必要
           none: 誰にも許可しない
           open: 誰でも登録可
+        warning_hint: モデレーションチームがスパムや悪意のある登録を迅速に処理できる自信がない限り、サインアップを承認制にすることをお勧めします。
       reject_blurhash:
         desc_html: Create Activityの添付画像を検査するblurhashを設定し、一致する場合はActivityを拒否します
         title: 拒否画像ハッシュ
       reject_pattern:
         desc_html: Create Activityのcontentを検査する正規表現パターンを設定し、一致する場合はActivityを拒否します
         title: 拒否パターン
-      warning_hint: モデレーションチームがスパムや悪意のある登録を迅速に処理できる自信がない限り、サインアップを承認制にすることをお勧めします。
       security:
         authorized_fetch: 連合サーバーによる署名なしでの情報取得を拒否する
         authorized_fetch_hint: ほかの連合サーバーから受け付けるリクエストに署名を必須にすることで、ユーザーによるブロックおよびドメインブロック両方の効果をより強力にします。ただし連合の処理コストが増えてパフォーマンス面で不利になるほか、このサーバーから送られた反応が届く範囲が狭まったり、連合における互換性の問題を招く可能性もあります。また、この機能は公開投稿やプロフィールへのアクセスをブロックした相手から完全に遮断できるものではありません。
@@ -917,6 +953,35 @@ ja:
       search: 検索
       title: ハッシュタグ
       updated_msg: ハッシュタグ設定が更新されました
+    terms_of_service:
+      back: 利用規約に戻る
+      changelog: 変更箇所
+      create: 自分のものを使う
+      current: 現在
+      draft: 下書き
+      generate: テンプレートを使用
+      generates:
+        action: 作成
+        chance_to_review_html: "<strong>生成された利用規約は自動的には公開されません。</strong>結果を確認する機会があります。手続きに必要な詳細を記入してください。"
+        explanation_html: 提供された利用規約のテンプレートは情報提供のみを目的としており、いかなる主題に関しても法的助言と見なされるべきではありません。ご自身の状況や具体的な法的質問については、必ずご自身の弁護士に相談してください。
+        title: 利用規約の設定
+      going_live_on_html: "%{date}より有効"
+      history: 履歴
+      live: 公開中
+      no_history: 利用規約の変更はまだ記録されていません。
+      no_terms_of_service_html: 現在、利用規約が設定されていません。利用規約は、明確さを提供し、ユーザーとのトラブルにおける潜在的な責任からあなたを保護するためのものです。
+      notified_on_html: "%{date}に通知されたユーザー"
+      notify_users: ユーザに通知
+      preview:
+        explanation_html: メールは、%{date} より前に登録した<strong>%{display_count}人のユーザー</strong>に送信されます。以下のテキストがメールに含まれます：
+        send_preview: "%{email} にプレビューを送信"
+        send_to_all:
+          other: "%{display_count}件のメールを送信"
+        title: サービス利用規約の通知をプレビュー
+      publish: 公開
+      published_on_html: "%{date} に公開"
+      save_draft: 下書きを保存
+      title: サービス利用規約
     title: 管理
     trends:
       allow: 許可
@@ -1120,7 +1185,6 @@ ja:
     migrate_account: 別のアカウントに引っ越す
     migrate_account_html: 引っ越し先を明記したい場合は<a href="%{path}">こちら</a>で設定できます。
     or_log_in_with: または次のサービスでログイン
-    privacy_policy_agreement_html: <a href="%{privacy_policy_path}" target="_blank">プライバシーポリシー</a>を読み、同意します
     progress:
       confirm: メールアドレスの確認
       details: ユーザー情報
@@ -1145,7 +1209,7 @@ ja:
     set_new_password: 新しいパスワード
     setup:
       email_below_hint_html: 確認メールが迷惑メールフォルダに振り分けられていないか確認してください。メールアドレスを間違えた場合は、ここでメールアドレスの変更と確認メールの再送ができます。
-      email_settings_hint_html: メールに記載のリンクを開いて %{email} を確認してください。
+      email_settings_hint_html: "%{email} に送信したリンクをクリックして Mastodon の使用を開始します。ここでお待ちしています。"
       link_not_received: 確認メールを受信できない場合は
       new_confirmation_instructions_sent: 確認用のリンクを記載した新しいメールを送信しました
       title: 確認メールを送信しました
@@ -1154,7 +1218,7 @@ ja:
       title: "%{domain}にログイン"
     sign_up:
       manual_review: "%{domain} への登録にはモデレーターによる承認が必要です。審査の参考になるように、簡単な自己紹介や %{domain} に登録したい理由などを記入してください。"
-      preamble: この Mastodon サーバーのアカウントがあれば、ネットワーク上の他の人のアカウントがどこでホストされているかに関係なく、その人をフォローすることができます。
+      preamble: この Mastodon サーバーのアカウントがあれば、fediverse上の他の人のアカウントがどこでホストされているかに関係なく、その人をフォローすることができます。
       title: さあ %{domain} でセットアップしましょう.
     status:
       account_status: アカウントの状態
@@ -1166,6 +1230,8 @@ ja:
       view_strikes: 過去のストライクを表示
     too_fast: フォームの送信が速すぎます。もう一度やり直してください。
     use_security_key: セキュリティキーを使用
+    user_agreement_html: <a href="%{terms_of_service_path}" target="_blank">利用規約</a> および <a href="%{privacy_policy_path}" target="_blank">プライバシーポリシー</a>を読み、同意します。
+    user_privacy_agreement_html: <a href="%{privacy_policy_path}" target="_blank">プライバシーポリシー</a>を読み、同意します
   author_attribution:
     example_title: サンプルテキスト
     hint_html: Mastodonの外でニュースやブログなどを執筆しているユーザーは、Mastodonで自分の記事が共有されたときに著者情報を表示させることができます。
@@ -1644,7 +1710,7 @@ ja:
   scheduled_statuses:
     over_daily_limit: その日予約できる投稿数 %{limit}を超えています
     over_total_limit: 予約できる投稿数 %{limit}を超えています
-    too_soon: より先の時間を指定してください
+    too_soon: 日付は未来でなければなりません
   self_destruct:
     lead_html: 残念ながら、<strong>%{domain}</strong> は恒久的に閉鎖されます。ここにお持ちだったアカウントを今後使うことはできませんが、これまでのデータのバックアップを要求することはまだ可能です。
     title: このサーバーは閉鎖されます
@@ -1803,6 +1869,8 @@ ja:
       too_late: このストライクに抗議するには遅すぎます
   tags:
     does_not_match_previous_name: 以前の名前と一致しません
+  terms_of_service:
+    title: サービス利用規約
   themes:
     contrast: Mastodon (ハイコントラスト)
     default: Mastodon (ダーク)
@@ -1834,6 +1902,10 @@ ja:
     recovery_instructions_html: 携帯電話を紛失した場合、以下の内どれかのリカバリーコードを使用してアカウントへアクセスすることができます。<strong>リカバリーコードは大切に保全してください。</strong>たとえば印刷してほかの重要な書類と一緒に保管することができます。
     webauthn: セキュリティキー
   user_mailer:
+    announcement_published:
+      description: "%{domain}の管理者からの告知："
+      subject: サービスに関する告知
+      title: "%{domain}のサービスに関する告知"
     appeal_approved:
       action: アカウント設定
       explanation: "%{strike_date}のストライクに対して、あなたが%{appeal_date}に行った申し立ては承認されました。アカウントは正常な状態に戻りました。"
@@ -1863,6 +1935,15 @@ ja:
       further_actions_html: あなたがログインしていない場合は、すぐに%{action}し、アカウントを安全に保つために二要素認証を有効にすることをお勧めします。
       subject: 新しいIPアドレスからのアクセスがありました
       title: 新しいサインイン
+    terms_of_service_changed:
+      agreement: "%{domain} を引き続き使用することで、これらの条件に同意したことになります。更新された条件に同意しない場合は、アカウントを削除することでいつでも %{domain} との契約を終了することができます。"
+      changelog: 一目で分かる、この更新があなたにとって意味することは次の通りです：
+      description: このメールは、%{domain} の利用規約にいくつかの変更が加えられているため発信されました。これらの変更は %{date}より有効です。更新された利用規約をこちらで全てご確認いただくことをお勧めします：
+      description_html: このメールは、%{domain} の利用規約にいくつかの変更が加えられているため発信されました。これらの変更は <strong>%{date}</strong>より有効です。<a href="%{path}" target="_blank">更新された利用規約をこちらで全て</a>ご確認いただくことをお勧めします。
+      sign_off: "%{domain} チーム"
+      subject: 利用規約の更新
+      subtitle: "%{domain} の利用規約が変更されています"
+      title: 重要な更新
     warning:
       appeal: 抗議を送信
       appeal_description: これが間違いだと思われる場合は、%{instance}のスタッフに申し立てすることができます。

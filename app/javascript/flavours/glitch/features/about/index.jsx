@@ -3,27 +3,25 @@ import { PureComponent } from 'react';
 
 import { defineMessages, injectIntl, FormattedMessage } from 'react-intl';
 
-import classNames from 'classnames';
 import { Helmet } from 'react-helmet';
 
-import { List as ImmutableList } from 'immutable';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import { connect } from 'react-redux';
 
-import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
-import ExpandMoreIcon from '@/material-icons/400-24px/expand_more.svg?react';
-import { fetchServer, fetchExtendedDescription, fetchDomainBlocks  } from 'flavours/glitch/actions/server';
+import { fetchServer, fetchExtendedDescription, fetchDomainBlocks, fetchBubbleDomains  } from 'flavours/glitch/actions/server';
+import { Account } from 'flavours/glitch/components/account';
 import Column from 'flavours/glitch/components/column';
-import { Icon  }  from 'flavours/glitch/components/icon';
 import { ServerHeroImage } from 'flavours/glitch/components/server_hero_image';
 import { Skeleton } from 'flavours/glitch/components/skeleton';
-import Account from 'flavours/glitch/containers/account_container';
-import LinkFooter from 'flavours/glitch/features/ui/components/link_footer';
+import { LinkFooter} from 'flavours/glitch/features/ui/components/link_footer';
+
+import { Section } from './components/section';
+import { RulesSection } from './components/rules';
 
 const messages = defineMessages({
   title: { id: 'column.about', defaultMessage: 'About' },
-  rules: { id: 'about.rules', defaultMessage: 'Server rules' },
   blocks: { id: 'about.blocks', defaultMessage: 'Moderated servers' },
+  bubble: { id: 'about.bubble.title', defaultMessage: 'Bubble servers' },
   silenced: { id: 'about.domain_blocks.silenced.title', defaultMessage: 'Limited' },
   silencedExplanation: { id: 'about.domain_blocks.silenced.explanation', defaultMessage: 'You will generally not see profiles and content from this server, unless you explicitly look it up or opt into it by following.' },
   suspended: { id: 'about.domain_blocks.suspended.title', defaultMessage: 'Suspended' },
@@ -44,55 +42,24 @@ const severityMessages = {
 
 const mapStateToProps = state => ({
   server: state.getIn(['server', 'server']),
+  locale: state.getIn(['meta', 'locale']),
   extendedDescription: state.getIn(['server', 'extendedDescription']),
   domainBlocks: state.getIn(['server', 'domainBlocks']),
+  bubbleDomains: state.getIn(['server', 'bubbleDomains']),
 });
-
-class Section extends PureComponent {
-
-  static propTypes = {
-    title: PropTypes.string,
-    children: PropTypes.node,
-    open: PropTypes.bool,
-    onOpen: PropTypes.func,
-  };
-
-  state = {
-    collapsed: !this.props.open,
-  };
-
-  handleClick = () => {
-    const { onOpen } = this.props;
-    const { collapsed } = this.state;
-
-    this.setState({ collapsed: !collapsed }, () => onOpen && onOpen());
-  };
-
-  render () {
-    const { title, children } = this.props;
-    const { collapsed } = this.state;
-
-    return (
-      <div className={classNames('about__section', { active: !collapsed })}>
-        <div className='about__section__title' role='button' tabIndex={0} onClick={this.handleClick}>
-          <Icon id={collapsed ? 'chevron-right' : 'chevron-down'} icon={collapsed ? ChevronRightIcon : ExpandMoreIcon} /> {title}
-        </div>
-
-        {!collapsed && (
-          <div className='about__section__body'>{children}</div>
-        )}
-      </div>
-    );
-  }
-
-}
 
 class About extends PureComponent {
 
   static propTypes = {
     server: ImmutablePropTypes.map,
+    locale: ImmutablePropTypes.string,
     extendedDescription: ImmutablePropTypes.map,
     domainBlocks: ImmutablePropTypes.contains({
+      isLoading: PropTypes.bool,
+      isAvailable: PropTypes.bool,
+      items: ImmutablePropTypes.list,
+    }),
+    bubbleDomains: ImmutablePropTypes.contains({
       isLoading: PropTypes.bool,
       isAvailable: PropTypes.bool,
       items: ImmutablePropTypes.list,
@@ -113,8 +80,13 @@ class About extends PureComponent {
     dispatch(fetchDomainBlocks());
   };
 
+  handleBubbleDomainsOpen = () => {
+    const { dispatch } = this.props;
+    dispatch(fetchBubbleDomains());
+  };
+
   render () {
-    const { multiColumn, intl, server, extendedDescription, domainBlocks } = this.props;
+    const { multiColumn, intl, server, extendedDescription, domainBlocks, bubbleDomains, locale } = this.props;
     const isLoading = server.get('isLoading');
 
     return (
@@ -123,7 +95,7 @@ class About extends PureComponent {
           <div className='about__header'>
             <ServerHeroImage blurhash={server.getIn(['thumbnail', 'blurhash'])} src={server.getIn(['thumbnail', 'url'])} srcSet={server.getIn(['thumbnail', 'versions'])?.map((value, key) => `${value} ${key.replace('@', '')}`).join(', ')} className='about__header__hero' />
             <h1>{isLoading ? <Skeleton width='10ch' /> : server.get('domain')}</h1>
-            <p><FormattedMessage id='about.powered_by' defaultMessage='Decentralized social media powered by {mastodon}' values={{ mastodon: <a href='https://joinmastodon.org' className='about__mail' target='_blank'>Mastodon</a> }} /></p>
+            <p><FormattedMessage id='about.powered_by' defaultMessage='Decentralized social media powered by {mastodon}' values={{ mastodon: <a href='https://joinmastodon.org' className='about__mail' target='_blank' rel='noopener'>Mastodon</a> }} /></p>
           </div>
 
           <div className='about__meta'>
@@ -163,18 +135,27 @@ class About extends PureComponent {
             ))}
           </Section>
 
-          <Section title={intl.formatMessage(messages.rules)}>
-            {!isLoading && (server.get('rules', ImmutableList()).isEmpty() ? (
-              <p><FormattedMessage id='about.not_available' defaultMessage='This information has not been made available on this server.' /></p>
+          <RulesSection />
+
+          <Section title={intl.formatMessage(messages.bubble)} onOpen={this.handleBubbleDomainsOpen}>
+            {bubbleDomains.get('isLoading') ? (
+              <Skeleton width='100%' />
+            ) : (bubbleDomains.get('isAvailable') ? (
+              <>
+                <p><FormattedMessage id='about.bubble.preamble' defaultMessage='This server provides a "bubble timeline", which displays content from these other servers in the fediverse that have been chosen by the admins of this server.' /></p>
+
+                {bubbleDomains.get('items').size > 0 && (
+                  <div className='about__bubble-domains'>
+                    {bubbleDomains.get('items').map(domain => (
+                      <div className='about__bubble-domains__domain' key={domain}>
+                        <h6 className='about__bubble-domains__domain__header'>{domain}</h6>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             ) : (
-              <ol className='rules-list'>
-                {server.get('rules').map(rule => (
-                  <li key={rule.get('id')}>
-                    <div className='rules-list__text'>{rule.get('text')}</div>
-                    {rule.get('hint').length > 0 && (<div className='rules-list__hint'>{rule.get('hint')}</div>)}
-                  </li>
-                ))}
-              </ol>
+              <p><FormattedMessage id='about.not_available' defaultMessage='This information has not been made available on this server.' /></p>
             ))}
           </Section>
 
@@ -212,6 +193,7 @@ class About extends PureComponent {
           <LinkFooter />
 
           <div className='about__footer'>
+            <p><FormattedMessage id='about.chuckya_disclaimer' defaultMessage='Chuckya is a free and open-source fork of Glitch-soc.' /></p>
             <p><FormattedMessage id='about.fork_disclaimer' defaultMessage='Glitch-soc is free open source software forked from Mastodon.' /></p>
             <p><FormattedMessage id='about.disclaimer' defaultMessage='Mastodon is free, open-source software, and a trademark of Mastodon gGmbH.' /></p>
           </div>

@@ -11,11 +11,11 @@ import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import SquigglyArrow from '@/svg-icons/squiggly_arrow.svg?react';
 import { fetchLists } from 'mastodon/actions/lists';
 import { openModal } from 'mastodon/actions/modal';
-import Column from 'mastodon/components/column';
+import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
+import { Dropdown } from 'mastodon/components/dropdown_menu';
 import { Icon } from 'mastodon/components/icon';
 import ScrollableList from 'mastodon/components/scrollable_list';
-import DropdownMenuContainer from 'mastodon/containers/dropdown_menu_container';
 import { getOrderedLists } from 'mastodon/selectors/lists';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
@@ -60,12 +60,11 @@ const ListItem: React.FC<{
         <span>{title}</span>
       </Link>
 
-      <DropdownMenuContainer
+      <Dropdown
         scrollKey='lists'
         items={menu}
-        icons='ellipsis-h'
+        icon='ellipsis-h'
         iconComponent={MoreHorizIcon}
-        direction='right'
         title={intl.formatMessage(messages.more)}
       />
     </div>

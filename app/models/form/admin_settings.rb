@@ -35,6 +35,8 @@ class Form::AdminSettings
     trending_status_cw
     show_domain_blocks
     show_domain_blocks_rationale
+    show_bubble_domains
+    allow_referrer_origin
     noindex
     outgoing_spoilers
     require_invite_text
@@ -48,15 +50,18 @@ class Form::AdminSettings
     reject_blurhash
     app_icon
     favicon
+    min_age
   ).freeze
 
   INTEGER_KEYS = %i(
     media_cache_retention_period
     content_cache_retention_period
     backups_retention_period
+    min_age
   ).freeze
 
   BOOLEAN_KEYS = %i(
+    allow_referrer_origin
     timeline_preview
     activity_api_enabled
     peers_api_enabled
@@ -86,6 +91,10 @@ class Form::AdminSettings
     flavour_and_skin
   ).freeze
 
+  DIGEST_KEYS = %i(
+    custom_css
+  ).freeze
+
   OVERRIDEN_SETTINGS = {
     authorized_fetch: :authorized_fetch_mode?,
   }.freeze
@@ -100,7 +109,9 @@ class Form::AdminSettings
   validates :bootstrap_timeline_accounts, existing_username: { multiple: true }, if: -> { defined?(@bootstrap_timeline_accounts) }
   validates :show_domain_blocks, inclusion: { in: %w(disabled users all) }, if: -> { defined?(@show_domain_blocks) }
   validates :show_domain_blocks_rationale, inclusion: { in: %w(disabled users all) }, if: -> { defined?(@show_domain_blocks_rationale) }
+  validates :show_bubble_domains, inclusion: { in: %w(disabled users all) }, if: -> { defined?(@show_bubble_domains) }
   validates :media_cache_retention_period, :content_cache_retention_period, :backups_retention_period, numericality: { only_integer: true }, allow_blank: true, if: -> { defined?(@media_cache_retention_period) || defined?(@content_cache_retention_period) || defined?(@backups_retention_period) }
+  validates :min_age, numericality: { only_integer: true }, allow_blank: true, if: -> { defined?(@min_age) }
   validates :site_short_description, length: { maximum: DESCRIPTION_LIMIT }, if: -> { defined?(@site_short_description) }
   validates :reject_pattern, regexp_syntax: true, if: -> { defined?(@reject_pattern) }
   validates :status_page_url, url: true, allow_blank: true
@@ -140,6 +151,8 @@ class Form::AdminSettings
     KEYS.each do |key|
       next if PSEUDO_KEYS.include?(key) || !instance_variable_defined?(:"@#{key}")
 
+      cache_digest_value(key) if DIGEST_KEYS.include?(key)
+
       if UPLOAD_KEYS.include?(key)
         public_send(key).save
       else
@@ -158,6 +171,18 @@ class Form::AdminSettings
   end
 
   private
+
+  def cache_digest_value(key)
+    Rails.cache.delete(:"setting_digest_#{key}")
+
+    key_value = instance_variable_get(:"@#{key}")
+    if key_value.present?
+      Rails.cache.write(
+        :"setting_digest_#{key}",
+        Digest::SHA256.hexdigest(key_value)
+      )
+    end
+  end
 
   def typecast_value(key, value)
     if BOOLEAN_KEYS.include?(key)

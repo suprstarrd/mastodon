@@ -51,12 +51,15 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     @unresolved_mentions  = []
     @silenced_account_ids = []
     @params               = {}
+    @quote                = nil
+    @quote_uri            = nil
 
     process_status_params
 
     return reject_payload! if MediaAttachment.where(id: @params[:media_attachment_ids]).where(blurhash: Setting.reject_blurhash.split(/\r?\n/).compact_blank.uniq).present?
 
     process_tags
+    process_quote
     process_audience
 
     # Reject the status unless all the hashtags are usable:
@@ -65,7 +68,9 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     ApplicationRecord.transaction do
       @status = Status.create!(@params)
       attach_tags(@status)
+      attach_mentions(@status)
       attach_counts(@status)
+      attach_quote(@status)
     end
 
     resolve_thread(@status)
@@ -90,9 +95,14 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
   end
 
   def process_status_params
-    @status_parser = ActivityPub::Parser::StatusParser.new(@json, followers_collection: @account.followers_url, object: @object)
+    @status_parser = ActivityPub::Parser::StatusParser.new(
+      @json,
+      followers_collection: @account.followers_url,
+      actor_uri: ActivityPub::TagManager.instance.uri_for(@account),
+      object: @object
+    )
 
-    attachment_ids = process_attachments.take(Status::MEDIA_ATTACHMENTS_LIMIT).map(&:id)
+    attachment_ids = process_attachments.take(Status::REMOTE_MEDIA_ATTACHMENTS_LIMIT).map(&:id)
 
     @params = {
       uri: @status_parser.uri,
@@ -112,6 +122,7 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
       media_attachment_ids: attachment_ids,
       ordered_media_attachment_ids: attachment_ids,
       poll: process_poll,
+      quote_approval_policy: @status_parser.quote_policy,
     }
   end
 
@@ -173,6 +184,15 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     # not a big deal
     Trends.tags.register(status)
 
+    # Update featured tags
+    return if @tags.empty? || !status.distributable?
+
+    @account.featured_tags.where(tag_id: @tags.pluck(:id)).find_each do |featured_tag|
+      featured_tag.increment(status.created_at)
+    end
+  end
+
+  def attach_mentions(status)
     @mentions.each do |mention|
       mention.status = status
       mention.save
@@ -191,6 +211,18 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     end
   end
 
+  def attach_quote(status)
+    return if @quote.nil?
+
+    @quote.status = status
+    @quote.save
+
+    embedded_quote = safe_prefetched_embed(@account, @status_parser.quoted_object, @json['context'])
+    ActivityPub::VerifyQuoteService.new.call(@quote, fetchable_quoted_uri: @quote_uri, prefetched_quoted_object: embedded_quote, request_id: @options[:request_id])
+  rescue Mastodon::UnexpectedResponseError, *Mastodon::HTTP_CONNECTION_ERRORS
+    ActivityPub::RefetchAndVerifyQuoteWorker.perform_in(rand(30..600).seconds, @quote.id, @quote_uri, { 'request_id' => @options[:request_id] })
+  end
+
   def process_tags
     return if @object['tag'].nil?
 
@@ -203,6 +235,17 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
         process_emoji tag
       end
     end
+  end
+
+  def process_quote
+    return unless Mastodon::Feature.inbound_quotes_enabled?
+
+    @quote_uri = @status_parser.quote_uri
+    return if @quote_uri.blank?
+
+    approval_uri = @status_parser.quote_approval_uri
+    approval_uri = nil if unsupported_uri_scheme?(approval_uri)
+    @quote = Quote.new(account: @account, approval_uri: approval_uri)
   end
 
   def process_hashtag(tag)
@@ -256,7 +299,7 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     as_array(@object['attachment']).each do |attachment|
       media_attachment_parser = ActivityPub::Parser::MediaAttachmentParser.new(attachment)
 
-      next if media_attachment_parser.remote_url.blank? || media_attachments.size >= Status::MEDIA_ATTACHMENTS_LIMIT
+      next if media_attachment_parser.remote_url.blank? || media_attachments.size >= Status::REMOTE_MEDIA_ATTACHMENTS_LIMIT
 
       begin
         media_attachment = MediaAttachment.create(
@@ -340,7 +383,7 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     collection = @object['replies']
     return if collection.blank?
 
-    replies = ActivityPub::FetchRepliesService.new.call(status, collection, allow_synchronous_requests: false, request_id: @options[:request_id])
+    replies = ActivityPub::FetchRepliesService.new.call(status.account.uri, collection, allow_synchronous_requests: false, request_id: @options[:request_id])
     return unless replies.nil?
 
     uri = value_or_id(collection)
@@ -414,11 +457,7 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
   def addresses_local_accounts?
     return true if @options[:delivered_to_account_id]
 
-    local_usernames = (audience_to + audience_cc).uniq.select { |uri| ActivityPub::TagManager.instance.local_uri?(uri) }.map { |uri| ActivityPub::TagManager.instance.uri_to_local_id(uri, :username) }
-
-    return false if local_usernames.empty?
-
-    Account.local.exists?(username: local_usernames)
+    ActivityPub::TagManager.instance.uris_to_local_accounts((audience_to + audience_cc).uniq).exists?
   end
 
   def tombstone_exists?
