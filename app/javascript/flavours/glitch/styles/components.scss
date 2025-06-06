@@ -6864,7 +6864,6 @@ a.status-card {
 
   ul {
     overflow-y: auto;
-    flex-shrink: 0;
     padding-bottom: 8px;
   }
 
@@ -7376,18 +7375,19 @@ img.modal-warning {
 }
 
 .audio-player {
-  overflow: hidden;
   box-sizing: border-box;
+  container: audio-player / inline-size;
   position: relative;
-  background: var(--player-background-color, var(--background-color));
-  color: var(--player-foreground-color);
-  border-radius: 8px;
-  padding-bottom: 44px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   width: 100%;
+  aspect-ratio: 16 / 9;
+  color: var(--player-foreground-color);
+  background: var(--player-background-color, var(--background-color));
+  border-radius: 8px;
   outline: 1px solid var(--media-outline-color);
   outline-offset: -1px;
-  aspect-ratio: 16 / 9;
-  container: audio-player / inline-size;
 
   &__controls {
     display: grid;
@@ -7436,7 +7436,15 @@ img.modal-warning {
   }
 
   &__visualizer {
+    width: 100%;
     max-width: 200px;
+  }
+
+  .video-player__seek {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 24px;
+    z-index: 1; /* Ensure this renders on top of audio player controls */
   }
 
   &.inactive {
@@ -8286,7 +8294,6 @@ noscript {
     .avatar {
       display: block;
       flex: 0 0 auto;
-      width: 94px;
 
       .account__avatar {
         background: var(--background-color);
@@ -8518,6 +8525,20 @@ noscript {
     font-size: 14px;
     font-weight: 400;
     margin-bottom: 10px;
+
+    &__loading-indicator-wrapper {
+      position: relative;
+      height: 37px;
+
+      .loading-indicator {
+        left: 10px;
+      }
+
+      .circular-progress {
+        width: 14px;
+        height: 14px;
+      }
+    }
 
     label {
       display: block;
@@ -11108,7 +11129,7 @@ noscript {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 2px 10px;
   }
 
   &__numbers {
@@ -11443,7 +11464,7 @@ noscript {
   overflow: hidden;
   flex-shrink: 0;
   border-bottom: 1px solid var(--background-border-color);
-  touch-action: pan-x;
+  touch-action: pan-y;
 
   &__slides {
     display: flex;
@@ -11454,6 +11475,8 @@ noscript {
   &__slide {
     flex: 0 0 auto;
     flex-basis: 100%;
+    width: 100%;
+    overflow: hidden;
   }
 
   .status {
@@ -11477,5 +11500,13 @@ noscript {
     font-size: 12px;
     font-weight: 500;
     text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    .icon {
+      width: 16px;
+      height: 16px;
+    }
   }
 }
