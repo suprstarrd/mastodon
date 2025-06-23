@@ -5,7 +5,6 @@ A fork of a fork of a fork
 Adds:
 
 - Pinktext
-- Besties favicon
 
 ---
 
