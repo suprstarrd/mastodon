@@ -10,13 +10,13 @@ import { connect } from 'react-redux';
 
 import Favico from 'favico.js';
 import { debounce } from 'lodash';
-import { HotKeys } from 'react-hotkeys';
 
 import { focusApp, unfocusApp, changeLayout } from 'flavours/glitch/actions/app';
 import { synchronouslySubmitMarkers, submitMarkers, fetchMarkers } from 'flavours/glitch/actions/markers';
 import { fetchNotifications } from 'flavours/glitch/actions/notification_groups';
 import { INTRODUCTION_VERSION } from 'flavours/glitch/actions/onboarding';
 import { AlertsController } from 'flavours/glitch/components/alerts_controller';
+import { Hotkeys } from 'flavours/glitch/components/hotkeys';
 import { HoverCardController } from 'flavours/glitch/components/hover_card_controller';
 import { Permalink } from 'flavours/glitch/components/permalink';
 import { PictureInPicture } from 'flavours/glitch/features/picture_in_picture';
@@ -70,7 +70,6 @@ import {
   DomainBlocks,
   Mutes,
   PinnedStatuses,
-  GettingStartedMisc,
   Directory,
   OnboardingProfile,
   OnboardingFollows,
@@ -82,6 +81,7 @@ import {
   AccountFeatured,
 } from './util/async-components';
 import { ColumnsContextProvider } from './util/columns_context';
+import { focusColumn, getFocusedItemIndex, focusItemSibling } from './util/focusUtils';
 import { WrappedSwitch, WrappedRoute } from './util/react_router_helpers';
 
 // Dummy import, to make sure that <Status /> ends up in the application bundle.
@@ -108,41 +108,6 @@ const mapStateToProps = state => ({
   username: state.getIn(['accounts', me, 'username']),
 });
 
-const keyMap = {
-  help: '?',
-  new: 'n',
-  search: ['s', '/'],
-  forceNew: 'option+n',
-  toggleComposeSpoilers: 'option+x',
-  focusColumn: ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
-  reply: 'r',
-  favourite: 'f',
-  boost: 'b',
-  mention: 'm',
-  open: ['enter', 'o'],
-  openProfile: 'p',
-  moveDown: ['down', 'j'],
-  moveUp: ['up', 'k'],
-  back: 'backspace',
-  goToHome: 'g h',
-  goToNotifications: 'g n',
-  goToLocal: 'g l',
-  goToFederated: 'g t',
-  goToDirect: 'g d',
-  goToStart: 'g s',
-  goToFavourites: 'g f',
-  goToPinned: 'g p',
-  goToProfile: 'g u',
-  goToBlocked: 'g b',
-  goToMuted: 'g m',
-  goToRequests: 'g r',
-  toggleHidden: 'x',
-  bookmark: 'd',
-  toggleSensitive: 'h',
-  openMedia: 'e',
-  onTranslate: 't',
-};
-
 class SwitchingColumnsArea extends PureComponent {
   static propTypes = {
     identity: identityContextPropShape,
@@ -153,13 +118,8 @@ class SwitchingColumnsArea extends PureComponent {
   };
 
   UNSAFE_componentWillMount () {
-    if (this.props.singleColumn) {
-      document.body.classList.toggle('layout-single-column', true);
-      document.body.classList.toggle('layout-multiple-columns', false);
-    } else {
-      document.body.classList.toggle('layout-single-column', false);
-      document.body.classList.toggle('layout-multiple-columns', true);
-    }
+    document.body.classList.toggle('layout-single-column', this.props.singleColumn);
+    document.body.classList.toggle('layout-multiple-columns', !this.props.singleColumn);
   }
 
   componentDidUpdate (prevProps) {
@@ -211,8 +171,8 @@ class SwitchingColumnsArea extends PureComponent {
             {singleColumn ? <Redirect from='/deck' to='/home' exact /> : null}
             {singleColumn && pathName.startsWith('/deck/') ? <Redirect from={pathName} to={{...this.props.location, pathname: pathName.slice(5)}} /> : null}
             {/* Redirect old bookmarks (without /deck) with home-like routes to the advanced interface */}
-            {!singleColumn && pathName === '/getting-started' ? <Redirect from='/getting-started' to='/deck/getting-started' exact /> : null}
             {!singleColumn && pathName === '/home' ? <Redirect from='/home' to='/deck/getting-started' exact /> : null}
+            {pathName === '/getting-started' ? <Redirect from='/getting-started' to={singleColumn ? '/home' : '/deck/getting-started'} exact /> : null}
 
             <WrappedRoute path='/getting-started' component={GettingStarted} content={children} />
             <WrappedRoute path='/keyboard-shortcuts' component={KeyboardShortcuts} content={children} />
@@ -274,7 +234,6 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/followed_tags' component={FollowedTags} content={children} />
             <WrappedRoute path='/mutes' component={Mutes} content={children} />
             <WrappedRoute path='/lists' component={Lists} content={children} />
-            <WrappedRoute path='/getting-started-misc' component={GettingStartedMisc} content={children} />
 
             <Route component={BundleColumnError} />
           </WrappedSwitch>
@@ -426,6 +385,10 @@ class UI extends PureComponent {
     }
   };
 
+  handleDonate = () => {
+    location.href = 'https://joinmastodon.org/sponsors#donate'
+  }
+
   componentDidMount () {
     const { signedIn } = this.props.identity;
 
@@ -452,10 +415,6 @@ class UI extends PureComponent {
 
       setTimeout(() => this.props.dispatch(fetchServer()), 3000);
     }
-
-    this.hotkeys.__mousetrap__.stopCallback = (e, element) => {
-      return ['TEXTAREA', 'SELECT', 'INPUT'].includes(element.tagName);
-    };
 
     if (typeof document.hidden !== 'undefined') { // Opera 12.10 and Firefox 18 and later support
       this.visibilityHiddenProp = 'hidden';
@@ -537,20 +496,34 @@ class UI extends PureComponent {
   };
 
   handleHotkeyFocusColumn = e => {
-    const index  = (e.key * 1) + 1; // First child is drawer, skip that
-    const column = this.node.querySelector(`.column:nth-child(${index})`);
-    if (!column) return;
-    const container = column.querySelector('.scrollable');
+    focusColumn({index: e.key * 1});
+  };
 
-    if (container) {
-      const status = container.querySelector('.focusable');
+  handleHotkeyLoadMore = () => {
+    document.querySelector('.load-more')?.focus();
+  };
 
-      if (status) {
-        if (container.scrollTop > status.offsetTop) {
-          status.scrollIntoView(true);
-        }
-        status.focus();
-      }
+  handleMoveUp = () => {
+    const currentItemIndex = getFocusedItemIndex();
+    if (currentItemIndex === -1) {
+      focusColumn({
+        index: 1,
+        focusItem: 'first-visible',
+      });
+    } else {
+      focusItemSibling(currentItemIndex, -1);
+    }
+  };
+
+  handleMoveDown = () => {
+    const currentItemIndex = getFocusedItemIndex();
+    if (currentItemIndex === -1) {
+      focusColumn({
+        index: 1,
+        focusItem: 'first-visible',
+      });
+    } else {
+      focusItemSibling(currentItemIndex, 1);
     }
   };
 
@@ -564,10 +537,6 @@ class UI extends PureComponent {
     } else {
       history.push('/');
     }
-  };
-
-  setHotkeysRef = c => {
-    this.hotkeys = c;
   };
 
   handleHotkeyToggleHelp = () => {
@@ -644,6 +613,9 @@ class UI extends PureComponent {
       forceNew: this.handleHotkeyForceNew,
       toggleComposeSpoilers: this.handleHotkeyToggleComposeSpoilers,
       focusColumn: this.handleHotkeyFocusColumn,
+      focusLoadMore: this.handleHotkeyLoadMore,
+      moveDown: this.handleMoveDown,
+      moveUp: this.handleMoveUp,
       back: this.handleHotkeyBack,
       goToHome: this.handleHotkeyGoToHome,
       goToNotifications: this.handleHotkeyGoToNotifications,
@@ -657,10 +629,11 @@ class UI extends PureComponent {
       goToBlocked: this.handleHotkeyGoToBlocked,
       goToMuted: this.handleHotkeyGoToMuted,
       goToRequests: this.handleHotkeyGoToRequests,
+      cheat: this.handleDonate,
     };
 
     return (
-      <HotKeys keyMap={keyMap} handlers={handlers} ref={this.setHotkeysRef} attach={window} focused>
+      <Hotkeys global handlers={handlers}>
         <div className={className} ref={this.setRef}>
           {moved && (<div className='flash-message alert'>
             <FormattedMessage
@@ -687,7 +660,7 @@ class UI extends PureComponent {
           <ModalContainer />
           <UploadArea active={draggingOver} onClose={this.closeUploadModal} />
         </div>
-      </HotKeys>
+      </Hotkeys>
     );
   }
 
