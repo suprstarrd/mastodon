@@ -1,13 +1,28 @@
 # frozen_string_literal: true
 
 module ThemeHelper
+  def javascript_inline_tag(path)
+    entry = InlineScriptManager.instance.file(path)
+
+    # Only add hash if we don't allow arbitrary includes already, otherwise it's going
+    # to break the React Tools browser extension or other inline scripts
+    unless Rails.env.development? && request.content_security_policy.dup.script_src.include?("'unsafe-inline'")
+      request.content_security_policy = request.content_security_policy.clone.tap do |policy|
+        values = policy.script_src
+        values << "'sha256-#{entry[:digest]}'"
+        policy.script_src(*values)
+      end
+    end
+
+    content_tag(:script, entry[:contents], type: 'text/javascript')
+  end
+
   def theme_style_tags(flavour_and_skin)
     flavour, theme = flavour_and_skin
-
     if theme == 'system'
       ''.html_safe.tap do |tags|
-        tags << vite_stylesheet_tag(theme_path_for(flavour, 'mastodon-light'), type: :virtual, media: 'not all and (prefers-color-scheme: dark)', crossorigin: 'anonymous')
-        tags << vite_stylesheet_tag(theme_path_for(flavour, 'default'), type: :virtual, media: '(prefers-color-scheme: dark)', crossorigin: 'anonymous')
+        tags << vite_stylesheet_tag("skins/#{flavour}/mastodon-light", type: :virtual, media: 'not all and (prefers-color-scheme: dark)', crossorigin: 'anonymous')
+        tags << vite_stylesheet_tag("skins/#{flavour}/default", type: :virtual, media: '(prefers-color-scheme: dark)', crossorigin: 'anonymous')
       end
     elsif theme == 'system-modern'
       ''.html_safe.tap do |tags|
@@ -15,7 +30,7 @@ module ThemeHelper
         tags << vite_stylesheet_tag("skins/#{flavour}/modern-dark", type: :virtual, media: '(prefers-color-scheme: dark)', crossorigin: 'anonymous')
       end
     else
-      vite_stylesheet_tag theme_path_for(flavour, theme), type: :virtual, media: 'all', crossorigin: 'anonymous'
+      vite_stylesheet_tag "skins/#{flavour}/#{theme}", type: :virtual, media: 'all', crossorigin: 'anonymous'
     end
   end
 
@@ -61,9 +76,5 @@ module ThemeHelper
 
   def theme_color_for(theme)
     ['mastodon-light', 'modern-light'].include?(theme) ? Themes::THEME_COLORS[:light] : Themes::THEME_COLORS[:dark]
-  end
-
-  def theme_path_for(flavour, theme)
-    "skins/#{flavour}/#{theme}"
   end
 end

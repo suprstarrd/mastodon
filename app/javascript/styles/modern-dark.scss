@@ -1,20 +1,18 @@
 // Mastodon Modern theme by Freeplay! Check the original repo for more info: https://git.gay/freeplay/Mastodon-Modern
 // Everything in the "modern" directory is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License: http://creativecommons.org/licenses/by-sa/4.0/
 
-@use 'mastodon/variables';
+@use 'mastodon/theme/dark';
+@use 'mastodon/theme/utils';
+
 @use 'application';
 @use 'modern/style';
 
-:root {
-  --accent-clr: #8c8dff;
-  --accent-deep-clr: #5455ff;
-  --bg-primary: #15171c;
-  --bg-secondary: #1d2026;
-  --bg-tertiary: #101115;
-  --bg-quaternary: #0e0f13;
-  --bg-selected: #1c1f26;
-}
+.theme-modern-dark,
+html:where(
+  :not([data-user-theme='modern-light'], [data-user-theme='system-modern'])
+) {
+  color-scheme: dark;
 
-body {
-  font-family: 'DM Sans', mastodon-font-sans-serif, sans-serif;
+  @include dark.tokens;
+  @include utils.invert-on-dark;
 }
