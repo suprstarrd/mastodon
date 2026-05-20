@@ -6,8 +6,8 @@ import { throttle } from 'lodash';
 import api from 'flavours/glitch/api';
 import { browserHistory } from 'flavours/glitch/components/router';
 import { countableText } from 'flavours/glitch/features/compose/util/counter';
-import { search as emojiSearch } from 'flavours/glitch/features/emoji/emoji_mart_search_light';
 import { tagHistory } from 'flavours/glitch/settings';
+import { emojiMartSearch } from '@/flavours/glitch/features/emoji/picker';
 import { recoverHashtags } from 'flavours/glitch/utils/hashtag';
 
 import { showAlert, showAlertForError } from './alerts';
@@ -166,10 +166,11 @@ export function resetCompose() {
   };
 }
 
-export const focusCompose = (defaultText = '') => (dispatch, getState) => {
+export const focusCompose = (defaultText = '', caretStart = false) => (dispatch, getState) => {
   dispatch({
     type: COMPOSE_FOCUS,
     defaultText,
+    caretStart,
   });
 
   ensureComposeIsVisible(getState);
@@ -233,10 +234,6 @@ export function submitCompose(overridePrivacy = null, successCallback = undefine
       return;
     }
 
-    if (getState().getIn(['compose', 'advanced_options', 'do_not_federate'])) {
-      status = status + ' 👁️';
-    }
-
     dispatch(submitComposeRequest());
 
     // If we're editing a post with media attachments, those have not
@@ -267,6 +264,7 @@ export function submitCompose(overridePrivacy = null, successCallback = undefine
         status,
         spoiler_text,
         content_type: getState().getIn(['compose', 'content_type']),
+        local_only: getState().getIn(['compose', 'advanced_options', 'do_not_federate']),
         in_reply_to_id: getState().getIn(['compose', 'in_reply_to'], null),
         media_ids: media.map(item => item.get('id')),
         media_attributes,
@@ -640,7 +638,7 @@ export function clearComposeSuggestions() {
   };
 }
 
-const fetchComposeSuggestionsAccounts = throttle((dispatch, getState, token) => {
+const fetchComposeSuggestionsAccounts = throttle((dispatch, token) => {
   if (fetchComposeSuggestionsAccountsController) {
     fetchComposeSuggestionsAccountsController.abort();
   }
@@ -667,12 +665,14 @@ const fetchComposeSuggestionsAccounts = throttle((dispatch, getState, token) => 
   });
 }, 200, { leading: true, trailing: true });
 
-const fetchComposeSuggestionsEmojis = (dispatch, getState, token) => {
-  const results = emojiSearch(token.replace(':', ''), { maxResults: 5 });
+const fetchComposeSuggestionsEmojis = async (dispatch, token) => {
+  // Right now we are hard-coding the locale to English since the picker search only supports English.
+  // Once we replace the legacy picker we can remove this and use the actual locale of the user.
+  const results = await emojiMartSearch(token, 'en', 5);
   dispatch(readyComposeSuggestionsEmojis(token, results));
 };
 
-const fetchComposeSuggestionsTags = throttle((dispatch, getState, token) => {
+const fetchComposeSuggestionsTags = throttle((dispatch, token) => {
   if (fetchComposeSuggestionsTagsController) {
     fetchComposeSuggestionsTagsController.abort();
   }
@@ -705,14 +705,14 @@ export function fetchComposeSuggestions(token) {
   return (dispatch, getState) => {
     switch (token[0]) {
     case ':':
-      fetchComposeSuggestionsEmojis(dispatch, getState, token);
+      void fetchComposeSuggestionsEmojis(dispatch, token);
       break;
     case '#':
     case '＃':
-      fetchComposeSuggestionsTags(dispatch, getState, token);
+      fetchComposeSuggestionsTags(dispatch, token);
       break;
     default:
-      fetchComposeSuggestionsAccounts(dispatch, getState, token);
+      fetchComposeSuggestionsAccounts(dispatch, token);
       break;
     }
   };
@@ -745,7 +745,7 @@ export function selectComposeSuggestion(position, token, suggestion, path) {
     let completion, startPosition;
 
     if (suggestion.type === 'emoji') {
-      completion    = suggestion.native || suggestion.colons;
+      completion    = suggestion.native || `:${suggestion.id}:`;
       startPosition = position - 1;
 
       dispatch(useEmoji(suggestion));
