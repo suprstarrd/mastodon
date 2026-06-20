@@ -9,6 +9,7 @@ interface BaseMenuItem {
   highlighted?: boolean;
   disabled?: boolean;
   dangerous?: boolean;
+  iconId?: string;
 }
 
 export interface ActionMenuItem extends BaseMenuItem {

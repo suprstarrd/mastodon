@@ -12,4 +12,5 @@ export interface NotificationPolicyJSON {
     pending_requests_count: number;
     pending_notifications_count: number;
   };
+  for_bots: NotificationPolicyValue;
 }

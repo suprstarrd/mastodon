@@ -54,7 +54,18 @@ class AfterBlockDomainFromAccountService < BaseService
 
     return unless follow.account.activitypub?
 
-    ActivityPub::DeliveryWorker.perform_async(Oj.dump(serialize_payload(follow, ActivityPub::RejectFollowSerializer)), @account.id, follow.account.inbox_url)
+    ActivityPub::DeliveryWorker.perform_async(serialize_payload(follow, ActivityPub::RejectFollowSerializer).to_json, @account.id, follow.account.inbox_url)
+  end
+
+  def notify_of_severed_relationships!
+    return if @domain_block_event.nil?
+
+    event = AccountRelationshipSeveranceEvent.create!(account: @account, relationship_severance_event: @domain_block_event)
+    LocalNotificationWorker.perform_async(@account.id, event.id, 'AccountRelationshipSeveranceEvent', 'severed_relationships')
+  end
+
+  def domain_block_event
+    @domain_block_event ||= RelationshipSeveranceEvent.create!(type: :user_domain_block, target_name: @domain)
   end
 
   def notify_of_severed_relationships!

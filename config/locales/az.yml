@@ -54,6 +54,7 @@ az:
       new:
         title: Əngəllənən domenləri daxilə köçür
     instances:
+      
       dashboard:
         instance_followers_measure: oradakı izləyicilərimiz
         instance_follows_measure: buradakı izləyiciləri
@@ -63,6 +64,9 @@ az:
         create: Moderasiya notu əlavə et
         description_html: Notlara baxın, gələcəkdə özünüz və digər moderatorlar üçün notlar buraxın
         title: Moderasiya notları
+      confirm_purge: Bu domendən veriləri həmişəlik silmək istədiyinizə əminsiniz?
+      destroyed_msg: "%{domain} domenindən verilər artıq silinmək üçün növbədədir."
+      totals_time_period_hint_html: Aşağıdakı cəmlərə bütün vaxtlardakı verilər daxildir.
     reports:
       actions:
         suspend_description_html: Hesab və onun bütün məzmunları əlçatmaz olacaq və nəticədə silinəcək və onunla əlaqə qurmaq mümkün olmayacaq. 30 gün ərzində geri qaytarıla bilər. Bu hesaba aid bütün hesabatları bağlayır.
@@ -110,6 +114,14 @@ az:
         used_by_over_week:
           one: Keçən həftə bir nəfər istifadə etdi
           other: Keçən həftə %{count} nəfər istifadə etdi
+    email_subscriptions:
+      compliance_settings:
+        title: Riayətlilik ayarları
+      danger_zone:
+        erase_all_data:
+          action: Veriləri sil
+          title: Bütün veriləri sil
+      purged_msg: Bütün e-poçt abunəlik veriləri silinir.
   admin_mailer:
     auto_close_registrations:
       body: Son vaxtlarda moderator fəaliyyətinin olmamasına görə, %{instance} üzərindəki qeydiyyatlar avtomatik olaraq manual yoxlanış tələb edəcək şəkildə dəyişdirilib, beləliklə %{instance} potensial zərərli aktyorlar tərəfindən istifadə edilən platforma çevrilməyəcək. İstənilən vaxt açıq qeydiyyat rejiminə qaytara bilərsiniz.
@@ -118,17 +130,20 @@ az:
       next_steps: Moderasiya qərarını geri almaq üçün etirazı təsdiqləyə, ya da etirazı yox saya bilərsiniz.
       subject: "%{username}, %{instance} üzərindəki bir moderasiya qərarına etiraz edir"
   appearance:
+    
     animations_and_accessibility: Animasiyalar və erişiləbilənlik
     discovery: Kəşf et
     localization:
       guide_link_text: Hər kəs töhfə verə bilər.
     sensitive_content: Həssas məzmun
+    advanced_settings: Qabaqcıl ayarlar
   applications:
     created: Tətbiq uğurla yaradıldı
     destroyed: Tətbiq uğurla silindi
     regenerate_token: Erişim tokenini təkrar yarat
     token_regenerated: Erişim tokeni uğurla yaradıldı
     your_token: Erişim tokeniniz
+    warning: Bu verilərə çox diqqətlə yanaşın. Bunları heç kəslə paylaşmayın!
   auth:
     captcha_confirmation:
       help_html: CAPTCHA-nı həll etməklə bağlı probleminiz varsa, %{email} üzərindən əlaqə saxlaya bilərsiniz, sizə kömək edə bilərik.
@@ -170,6 +185,8 @@ az:
     confirm_password: Kimliyinizi doğrulamaq üçün hazırkı parolunuzu daxil edin
     proceed: Hesabı sil
     success_msg: Hesabınız uğurla silindi
+    warning:
+      data_removal: Göndərişləriniz və digər veriləriniz həmişəlik silinəcək
   edit_profile:
     basic_information: Təməl məlumatlar
     hint_html: "<strong>İnsanların hər kəsə açıq profilinizdə və göndərişlərinizin yanında nə göstərmək istədiyinizi özəlləşdirin.</strong> Doldurulmuş bir profilə və bir profil şəklinə sahib olduğunuz zaman digər şəxslərin sizi izləmə və sizinlə əlaqə qurma ehtimalı yüksəkdir."
@@ -201,6 +218,7 @@ az:
     preface: Başqa serverdən xaricə köçürdüyünüz veriləri (məsələn, izlədiyiniz və ya əngəllədiyiniz insanların siyahısını) daxilə köçürə bilərsiniz.
     type_groups:
       constructive: İzlənilənlər və Əlfəcinlər
+    success: Veriləriniz uğurla yüklənib və zamanla emal olunacaq
   invites:
     max_uses_prompt: Limitsiz
     prompt: Bu serverə erişim icazəsi vermək üçün keçid yaradın və başqaları ilə paylaşın
@@ -222,6 +240,7 @@ az:
     proceed_with_move: İzləyiciləri daşı
     warning:
       disabled_account: Hazırkı hesabınız daha sonra istifadəyə yararsız olacaq. Ancaq, verilərin xaricə köçürülməsinə, həmçinin təkrar aktivləşdirmə prosesinə erişə biləcəksiniz.
+      other_data: Başqa (göndərişləriniz və izlədiyiniz hesabların siyahısı daxil olmaqla) heç bir veri avtomatik olaraq danışmayacaq
   moderation:
     title: Moderasiya
   notification_mailer:
@@ -340,3 +359,9 @@ az:
     go_to_sso_account_settings: Kimlik provayderinizin hesab ayarlarına gedin
     otp_lost_help_html: Hər ikisinə də erişə bilmirsinizsə, %{email} ilə əlaqə saxlayın
     seamless_external_login: Xarici bir server üzərindən giriş etdiyiniz üçün parol və e-poçt ayarları mövcud deyil.
+  email_subscription_mailer:
+    notification:
+      footer:
+        privacy_html: E-poçtlar, Mastodon tərəfindən dəstəklənən %{domain} serverindən göndərilir. Bu serverin fərdi verilərinizi necə emal etdiyini anlamaq üçün <a href="%{privacy_policy_path}">Məxfilik Siyasətinə</a> baxın.
+  self_destruct:
+    lead_html: Təəssüf ki, <strong>%{domain}</strong> həmişəlik bağlanır. Əgər orda bir hesabınız varsa, onu istifadə etməyə davam edə bilməyəcəksiniz, ancaq hələ də verilərinizin bir nüsxəsini istəyə bilərsiniz.

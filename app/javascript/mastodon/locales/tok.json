@@ -346,7 +346,7 @@
   "featured_carousel.next": "kama",
   "featured_carousel.post": "toki",
   "featured_carousel.previous": "pini",
-  "featured_carousel.slide": "lipu {total} la lipu nanpa {index}",
+  "featured_carousel.slide": "toki {current, number} lon {max, number}",
   "filter_modal.added.review_and_configure_title": "o alasa e lawa",
   "filter_modal.added.settings_link": "lipu lawa",
   "filter_modal.select_filter.expired": "tenpo pini",
@@ -605,5 +605,8 @@
   "video.exit_fullscreen": "o weka tan sitelen suli",
   "video.expand": "o suli e ni",
   "video.hide": "o len e sitelen",
-  "video.pause": "o lape e ni"
+  "video.pause": "o lape e ni",
+  "carousel.current": "<sr>lipu</sr> {current, number} / {max, number}",
+  "carousel.slide": "lipu {current, number} lon {max, number}",
+  "featured_carousel.current": "<sr>toki</sr>{current, number} / {max, number}"
 }

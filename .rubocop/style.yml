@@ -61,3 +61,6 @@ Style/TrailingCommaInHashLiteral:
 
 Style/WordArray:
   MinSize: 3 # Override default of 2
+
+Style/OneClassPerFile:
+  Enabled: false

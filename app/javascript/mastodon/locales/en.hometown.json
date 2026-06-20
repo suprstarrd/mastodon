@@ -1,0 +1,7 @@
+{
+  "federation.change": "Adjust status federation",
+  "federation.federated.long": "Allow post to reach other instances",
+  "federation.federated.short": "Federated",
+  "federation.local_only.long": "Restrict this post only to my instance",
+  "federation.local_only.short": "Local-only"
+}

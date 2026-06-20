@@ -12,7 +12,6 @@ br:
       one: Heulier·ez
       other: Heulier·ez
       two: Heulier·ez
-    following: Koumanantoù
     last_active: oberiantiz ziwezhañ
     nothing_here: N'eus netra amañ !
     posts:
@@ -321,7 +320,6 @@ br:
       comment:
         none: Hini ebet
       confirm: Kadarnaat
-      delete_and_resolve: Dilemel ar c'hannadoù
       forwarded: Treuzkaset
       no_one_assigned: Den ebet
       notes:
@@ -515,7 +513,7 @@ br:
       guide_link: https://crowdin.com/project/mastodon
   application_mailer:
     salutation: "%{name},"
-    view: 'Sellet :'
+    view: 'Sellet:'
     view_profile: Gwelet ar profil
     view_status: Gwelet ar c'hannad
   applications:
@@ -585,7 +583,6 @@ br:
         none: Diwall
         suspend: Astaliñ ar gont
   edit_profile:
-    basic_information: Titouroù diavaez
     other: All
   emoji_styles:
     auto: Emgefreek

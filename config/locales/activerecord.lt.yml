@@ -75,3 +75,9 @@ lt:
           attributes:
             events:
               invalid_permissions: negali įtraukti įvykių, į kuriuos neturi teisių.
+        collection:
+          attributes:
+            collection_items:
+              too_many: yra per daug, leidžiama ne daugiau kaip %{count}
+            tag:
+              unusable: negali būti panaudota

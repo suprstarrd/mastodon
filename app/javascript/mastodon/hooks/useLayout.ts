@@ -9,5 +9,6 @@ export const useLayout = () => {
   return {
     singleColumn: layout === 'single-column' || layout === 'mobile',
     layout,
+    multiColumn: layout === 'multi-column',
   };
 };

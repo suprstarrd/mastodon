@@ -75,3 +75,9 @@ fr-CA:
           attributes:
             events:
               invalid_permissions: ne peut pas inclure des évènements pour lesquels vous n’avez pas les droits
+        collection:
+          attributes:
+            collection_items:
+              too_many: trop d'éléments, seuls %{count} éléments sont permis
+            tag:
+              unusable: ne peut pas être utilisé

@@ -80,6 +80,10 @@ export const Button: React.FC<Props> = ({
       title={title}
       type={type}
       {...props}
+      // Disabled buttons can't have focus, so we don't really
+      // disable the button during loading
+      // If the loading prop is used, announce label changes
+      // eslint-disable-next-line react/button-has-type -- set correctly via TS
     >
       {loading ? (
         <>

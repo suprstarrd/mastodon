@@ -66,15 +66,20 @@ RSpec.describe Request do
         expect(a_request(:get, 'http://example.com')).to have_been_made.once
       end
 
-      it 'executes a HTTP request when the first address is private' do
-        resolver = instance_double(Resolv::DNS)
+      context 'when first address is private' do
+        let(:resolv_service) { instance_double(Resolv) }
 
-        allow(resolver).to receive(:getaddresses).with('example.com').and_return(%w(0.0.0.0 2001:4860:4860::8844))
-        allow(resolver).to receive(:timeouts=).and_return(nil)
-        allow(Resolv::DNS).to receive(:open).and_yield(resolver)
+        before do
+          allow(Resolv).to receive(:new).and_return(resolv_service)
+          allow(resolv_service).to receive(:getaddresses).with('example.com').and_return(%w(0.0.0.0 2001:4860:4860::8844))
+        end
 
-        expect { |block| subject.perform(&block) }.to yield_control
-        expect(a_request(:get, 'http://example.com')).to have_been_made.once
+        it 'executes a HTTP request' do
+          expect { |block| subject.perform(&block) }
+            .to yield_control
+          expect(a_request(:get, 'http://example.com'))
+            .to have_been_made.once
+        end
       end
 
       it 'makes a request with expected headers, yields, and closes the underlying connection' do
@@ -123,14 +128,53 @@ RSpec.describe Request do
         WebMock.enable!
       end
 
+      let(:resolv_service) { instance_double(Resolv) }
+
+      before do
+        allow(Resolv).to receive(:new).with([be_a(Resolv::Hosts), be_a(Resolv::DNS)]).and_return(resolv_service)
+        allow(resolv_service).to receive(:getaddresses).with('example.com').and_return(%w(0.0.0.0 2001:db8::face))
+      end
+
       it 'raises Mastodon::ValidationError' do
-        resolver = instance_double(Resolv::DNS)
+        expect { subject.perform }
+          .to raise_error Mastodon::ValidationError
+      end
+    end
 
-        allow(resolver).to receive(:getaddresses).with('example.com').and_return(%w(0.0.0.0 2001:db8::face))
-        allow(resolver).to receive(:timeouts=).and_return(nil)
-        allow(Resolv::DNS).to receive(:open).and_yield(resolver)
+    context 'with persistent connection' do
+      before { stub_request(:get, 'http://example.com').to_return(body: SecureRandom.random_bytes(2.megabytes)) }
 
-        expect { subject.perform }.to raise_error Mastodon::ValidationError
+      let(:http_client) { described_class.http_client.persistent('http://example.com') }
+      let(:options) { { http_client: http_client } }
+
+      it 'leaves connection open after completely consumed response' do
+        allow(http_client).to receive(:close)
+
+        subject.perform { |response| response.truncated_body(3.megabytes) }
+
+        expect(http_client).to_not have_received(:close)
+      end
+
+      it 'leaves connection open after nearly consumed response' do
+        allow(http_client).to receive(:close)
+
+        subject.perform { |response| response.truncated_body(1.8.megabytes) }
+
+        expect(http_client).to_not have_received(:close)
+      end
+
+      it 'closes connection after unconsumed response' do
+        allow(http_client).to receive(:close)
+
+        subject.perform
+
+        expect(http_client).to have_received(:close)
+      end
+
+      it 'yields response' do
+        subject.perform do |response|
+          expect(response.body_with_limit(2.megabytes).size).to eq 2.megabytes
+        end
       end
     end
 

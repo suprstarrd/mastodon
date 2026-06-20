@@ -55,11 +55,8 @@ class AccountsController < ApplicationController
 
   def default_statuses
     # Hometown: local-only posts are not meant for RSS feeds, even if they are public.
-    if current_user.nil?
-      @account.statuses.without_local_only.where(visibility: [:public, :unlisted])
-    else
-      @account.statuses.where(visibility: [:public, :unlisted])
-    end
+HOMETOWN_TODO
+    @account.statuses.distributable_visibility
   end
 
   def only_media_scope

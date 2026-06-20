@@ -10,7 +10,7 @@ class ActivityPub::NoteSerializer < ActivityPub::Serializer
              :in_reply_to, :published, :url,
              :attributed_to, :to, :cc, :sensitive,
              :atom_uri, :in_reply_to_atom_uri,
-             :conversation, :context, :local_only
+             :conversation, :context
 
   attribute :content
   attribute :content_map, if: :language?
@@ -141,7 +141,7 @@ class ActivityPub::NoteSerializer < ActivityPub::Serializer
   end
 
   def virtual_tags
-    object.active_mentions.to_a.sort_by(&:id) + object.tags + object.emojis
+    object.active_mentions.to_a.sort_by(&:id) + object.tags + object.emojis + object.tagged_objects.map(&:object)
   end
 
   def atom_uri
@@ -250,6 +250,44 @@ class ActivityPub::NoteSerializer < ActivityPub::Serializer
     }
   end
 
+  def quote?
+    object.quote&.present?
+  end
+
+  def serializable_quote?
+    object.quote&.quoted_status&.present?
+  end
+
+  def quote_authorization?
+    object.quote.present? && ActivityPub::TagManager.instance.approval_uri_for(object.quote).present?
+  end
+
+  def quote
+    # TODO: handle inlining self-quotes
+    object.quote.quoted_status.present? ? ActivityPub::TagManager.instance.uri_for(object.quote.quoted_status) : { type: 'Tombstone' }
+  end
+
+  def quote_authorization
+    ActivityPub::TagManager.instance.approval_uri_for(object.quote)
+  end
+
+  def interaction_policy
+    approved_uris = []
+
+    # On outgoing posts, only automatic approval is supported
+    policy = object.quote_interaction_policy.automatic
+    approved_uris << ActivityPub::TagManager::COLLECTIONS[:public] if policy.public?
+    approved_uris << ActivityPub::TagManager.instance.followers_uri_for(object.account) if policy.followers?
+    approved_uris << ActivityPub::TagManager.instance.following_uri_for(object.account) if policy.following?
+    approved_uris << ActivityPub::TagManager.instance.uri_for(object.account) if approved_uris.empty?
+
+    {
+      canQuote: {
+        automaticApproval: approved_uris,
+      },
+    }
+  end
+
   class MediaAttachmentSerializer < ActivityPub::Serializer
     context_extensions :blurhash, :focal_point
 
@@ -259,6 +297,7 @@ class ActivityPub::NoteSerializer < ActivityPub::Serializer
     attribute :focal_point, if: :focal_point?
     attribute :width, if: :width?
     attribute :height, if: :height?
+    attribute :duration, if: :duration?
 
     has_one :icon, serializer: ActivityPub::ImageSerializer, if: :thumbnail?
 
@@ -302,12 +341,20 @@ class ActivityPub::NoteSerializer < ActivityPub::Serializer
       object.file.meta&.dig('original', 'height').present?
     end
 
+    def duration?
+      object.file.meta&.dig('original', 'duration').present?
+    end
+
     def width
       object.file.meta.dig('original', 'width')
     end
 
     def height
       object.file.meta.dig('original', 'height')
+    end
+
+    def duration
+      object.file.meta.dig('original', 'duration').seconds.iso8601
     end
   end
 
@@ -347,8 +394,9 @@ class ActivityPub::NoteSerializer < ActivityPub::Serializer
     end
   end
 
-  class CustomEmojiSerializer < ActivityPub::EmojiSerializer
-  end
+  class CustomEmojiSerializer < ActivityPub::EmojiSerializer; end
+
+  class CollectionSerializer < ActivityPub::FeaturedCollectionSerializer; end
 
   class OptionSerializer < ActivityPub::Serializer
     class RepliesSerializer < ActivityPub::Serializer

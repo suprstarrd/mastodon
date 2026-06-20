@@ -12,6 +12,7 @@
 #
 
 class UserInviteRequest < ApplicationRecord
+  # Hometown: Increase text size limit of invites
   TEXT_SIZE_LIMIT = 5000
 
   belongs_to :user, inverse_of: :invite_request

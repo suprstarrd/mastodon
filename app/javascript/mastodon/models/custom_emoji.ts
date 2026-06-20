@@ -12,6 +12,7 @@ export const CustomEmojiFactory = ImmutableRecord<CustomEmojiShape>({
   url: '',
   category: '',
   visible_in_picker: false,
+  featured: false,
 });
 
 export type EmojiMap = Record<string, ApiCustomEmojiJSON>;

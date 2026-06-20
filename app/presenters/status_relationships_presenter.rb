@@ -51,6 +51,11 @@ class StatusRelationshipsPresenter
     end
   end
 
+  # This one is currently on-demand as it is only used for quote posts
+  def authoring_accounts
+    @authoring_accounts ||= @statuses.compact.flat_map { |s| [s.account, s.proper.account, s.proper.quote&.quoted_account] }.uniq.compact
+  end
+
   private
 
   def build_filters_map(statuses, current_account_id)

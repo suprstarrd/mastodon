@@ -11,10 +11,6 @@ import { useAppSelector } from 'mastodon/store';
 
 // This needs to be kept in sync with app/models/report.rb
 const messages = defineMessages({
-  dislike: {
-    id: 'report_notification.categories.dislike_sentence',
-    defaultMessage: 'dislike',
-  },
   other: {
     id: 'report_notification.categories.other_sentence',
     defaultMessage: 'other',
@@ -110,10 +106,10 @@ export const NotificationAdminReport: React.FC<{
 
       <div className='notification-group__main'>
         <div className='notification-group__main__header'>
-          <div className='notification-group__main__header__label'>
+          <h2 className='notification-group__main__header__label'>
             {message}
             <RelativeTimestamp timestamp={report.created_at} />
-          </div>
+          </h2>
         </div>
 
         {report.comment.length > 0 && (

@@ -170,6 +170,7 @@ lad:
       warn: Averte
       web: Web
       whitelisted: Permitido para la federasyon
+      collections: Koleksyones
     action_logs:
       action_types:
         approve_appeal: Acheta apelasyon
@@ -456,6 +457,8 @@ lad:
       resolved_dns_records_hint_html: El nombre de domeno rezolve los sigientes domenos MX, los kualos son responsavles en ultima instansya de achetar la posta elektronika. Blokar un domeno MX blokara los rejistros de kualkier adreso de posta elektronika ke utilize el mezmo domeno MX, inkluzo si el nombre de domeno vizivle es desferente. <strong>Tenga kudiado de no blokar los prinsipales domenos de posta elektronika.</strong>
       resolved_through_html: Rezolvido por %{domain}
       title: Domenos de posta blokados
+      reset: Reinisya
+      search: Bushka
     export_domain_allows:
       new:
         title: Importa permisos de domeno
@@ -720,6 +723,7 @@ lad:
         invites: Envytasyones
         moderation: Moderasyon
         special: Espesial
+        email: Posta elektronika
       delete: Efasa
       description_html: Kon <strong>rolos de utilizador</strong>, puede personalizar las fonksiones i areas de Mastodon a las ke pueden akseder sus utilizadores.
       edit: Edita rolo '%{name}'
@@ -1079,6 +1083,24 @@ lad:
       status: Estado
       title: Webhooks
       webhook: Webhook
+    collections:
+      back_to_account: Retorna a la pajina del kuento
+      back_to_report: Retorna a la pajina del raporto
+      batch:
+        add_to_report: 'Adjusta al raporto #%{id}'
+        report: Raporto
+      no_collection_selected: No se troko dinguna koleksyon porke no eskojites dinguna
+      open: Avre
+      title: Koleksyones de kuentos - @%{name}
+      view_publicly: Ve puvlikamente
+    email_subscriptions:
+      accounts:
+        account: Kuento
+      danger_zone:
+        disable_feature:
+          action: Inkapasita
+      roles:
+        title: Rolos
   admin_mailer:
     auto_close_registrations:
       body: Por la falta de moderadores aktivos, los enrejistramyentos en %{instance} tyenen sido trokados otomatikamente para rekerir revizyon manuala, para ke %{instance} no se utilize potensyalmente komo platforma por malos aktores. Puedes trokarlo de muevo para avrir los enrejistramyentos en kualseker momento.
@@ -1137,7 +1159,6 @@ lad:
   application_mailer:
     notification_preferences: Troka preferensyas de posta
     salutation: "%{name},"
-    settings: 'Troka preferensyas de posta: %{link}'
     unsubscribe: Dezabona
     view: 'Mira:'
     view_profile: Ve profil
@@ -1307,8 +1328,6 @@ lad:
       your_appeal_pending: Tienes enviado una apelasyon
       your_appeal_rejected: Tu apelasyon fue refuzada
   edit_profile:
-    basic_information: Enformasyon bazika
-    hint_html: "<strong>Personaliza lo ke la djente ve en tu profil publiko i kon tus publikasyones.</strong> Es mas probavle ke otras personas te sigan i enteraktuen kontigo kuando kompletas tu profil i foto."
     other: Otros
   emoji_styles:
     auto: Otomatiko
@@ -1874,9 +1893,7 @@ lad:
   terms_of_service:
     title: Terminos de servisyo
   themes:
-    contrast: Mastodon (alto kontraste)
-    default: Mastodon (eskuro)
-    mastodon-light: Mastodon (klaro)
+    default: Mastodon
   time:
     formats:
       default: "%d de %b del %Y, %H:%M"
@@ -2037,3 +2054,19 @@ lad:
     not_supported: Este navigador no soporta yaves de sigurita
     otp_required: Para uzar yaves de sigurita, por favor kapasite primero la autentifikasyon de dos pasos.
     registered_on: Enrejistrado el %{date}
+  color_scheme:
+    auto: Otomatiko
+  contrast:
+    auto: Otomatiko
+  email_subscription_mailer:
+    confirmation:
+      action: Konfirma tu adreso de posta elektronika
+  email_subscriptions:
+    active: Aktivo
+    confirmations:
+      show:
+        unsubscribe: Dezabona
+    status: Estado
+  unsubscriptions:
+    show:
+      action: Dezabona

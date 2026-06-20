@@ -6,10 +6,8 @@ class ProcessMentionsService < BaseService
   # Scan status for mentions and fetch remote mentioned users,
   # and create local mention pointers
   # @param [Status] status
-  # @param [Boolean] save_records Whether to save records in database
-  def call(status, save_records: true)
+  def call(status)
     @status = status
-    @save_records = save_records
 
     return unless @status.local?
 
@@ -52,7 +50,7 @@ class ProcessMentionsService < BaseService
       # If after resolving it still isn't found or isn't the right
       # protocol, or it's a federated account and the status is local-only,
       # then give up
-      next match if mention_undeliverable?(mentioned_account) || mentioned_account&.unavailable? || (!mentioned_account.local? && @status.local_only?)
+      next match if mention_undeliverable?(mentioned_account) || mentioned_account&.unavailable?
 
       mention   = @previous_mentions.find { |x| x.account_id == mentioned_account.id }
       mention ||= @current_mentions.find  { |x| x.account_id == mentioned_account.id }
@@ -65,7 +63,7 @@ class ProcessMentionsService < BaseService
       "@#{mentioned_account.acct}"
     end
 
-    @status.save! if @save_records
+    @status.save! if @status.persisted?
   end
 
   def assign_mentions!
@@ -79,6 +77,8 @@ class ProcessMentionsService < BaseService
       dropped_mentions, @current_mentions = @current_mentions.partition { |mention| blocked_account_ids.include?(mention.account_id) || blocked_domains.include?(mention.account.domain) }
       dropped_mentions.each(&:destroy)
     end
+
+    return unless @status.persisted?
 
     @current_mentions.each do |mention|
       mention.save if (mention.new_record? || mention.silent_changed?) && @save_records

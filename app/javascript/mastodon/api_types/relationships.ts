@@ -15,4 +15,5 @@ export interface ApiRelationshipJSON {
   requested_by: boolean;
   requested: boolean;
   showing_reblogs: boolean;
+  muting_expires_at: string | null;
 }

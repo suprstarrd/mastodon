@@ -12,6 +12,8 @@ RSpec.describe 'Home page' do
       expect(page)
         .to have_css('noscript', text: /Mastodon/)
         .and have_css('body', class: 'app-body')
+      expect(find('.app-holder#mastodon')['data-props'])
+        .to eq('{"locale":"en"}')
     end
   end
 
@@ -56,8 +58,7 @@ RSpec.describe 'Home page' do
       it 'visits the root path and is redirected to the local live feed page', :js do
         visit root_path
 
-        # Hometown: the logged-out homepage is /about, not the local feed
-        expect(page).to have_current_path('/about')
+        expect(page).to have_current_path('/public/local')
       end
     end
   end

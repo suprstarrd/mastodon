@@ -4,7 +4,7 @@ class REST::PreferencesSerializer < ActiveModel::Serializer
   attribute :posting_default_privacy, key: 'posting:default:visibility'
   attribute :posting_default_sensitive, key: 'posting:default:sensitive'
   attribute :posting_default_language, key: 'posting:default:language'
-  attribute :posting_default_federation, key: 'posting:default:federation'
+  attribute :posting_default_federation, key: 'posting:default:federation' # Hometown: default federation option
   attribute :posting_default_quote_policy, key: 'posting:default:quote_policy'
 
   attribute :reading_default_sensitive_media, key: 'reading:expand:media'
@@ -35,6 +35,7 @@ class REST::PreferencesSerializer < ActiveModel::Serializer
     object.user.setting_expand_spoilers
   end
 
+  # Hometown: default federation option
   def posting_default_federation
     object.user.setting_default_federation
   end

@@ -27,6 +27,7 @@ class StatusesCleanupController < ApplicationController
   end
 
   def resource_params
-    params.expect(account_statuses_cleanup_policy: [:enabled, :min_status_age, :keep_direct, :keep_local, :keep_pinned, :keep_polls, :keep_media, :keep_self_fav, :keep_self_bookmark, :min_favs, :min_reblogs])
+    # Hometown dev note: Make sure the ":keep_local" param is in there!
+    params.expect(account_statuses_cleanup_policy: [:enabled, :min_status_age, :keep_local, :keep_direct, :keep_pinned, :keep_polls, :keep_media, :keep_self_fav, :keep_self_bookmark, :min_favs, :min_reblogs])
   end
 end

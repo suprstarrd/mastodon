@@ -100,6 +100,7 @@ lt:
         theme: Tema, kurią mato atsijungę lankytojai ir nauji vartotojai.
         thumbnail: Maždaug 2:1 dydžio vaizdas, rodomas šalia tavo serverio informacijos.
         trends: Tendencijos rodo, kurie įrašai, grotažymės ir naujienų istorijos tavo serveryje sulaukia didžiausio susidomėjimo.
+        bootstrap_timeline_accounts: Šios paskyros bus rekomenduojamos naujiems naudotojams Rekomenduojami sekimai skyrelyje. Pateikite rekomenduojamas paskyras, atskirtas kableliais.
       imports:
         data: CSV failas, eksportuotas iš kito „Mastodon“ serverio.
       invite_request:
@@ -195,6 +196,7 @@ lt:
         username: Naudotojo vardas
         username_or_email: Naudotojo vardas arba el. paštas
         whole_word: Visas žodis
+        confirm_password: Patvirtink slaptažodį
       email_domain_block:
         with_dns_records: Įtraukti MX įrašus ir domeno IP adresus
       featured_tag:
@@ -267,9 +269,9 @@ lt:
         jurisdiction: Teisinis teismingumas
         min_age: Mažiausias amžius
       user:
-        date_of_birth_1i: Diena
+        date_of_birth_1i: Metai
         date_of_birth_2i: Mėnuo
-        date_of_birth_3i: Metai
+        date_of_birth_3i: Diena
         role: Vaidmuo
         time_zone: Laiko juosta
       user_role:

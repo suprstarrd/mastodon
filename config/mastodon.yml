@@ -11,5 +11,8 @@ shared:
   version:
     metadata: <%= ENV.fetch('MASTODON_VERSION_METADATA', nil)&.to_json %>
     prerelease: <%= ENV.fetch('MASTODON_VERSION_PRERELEASE', nil)&.to_json %>
+  donation_campaigns:
+    api_url: <%= ENV.fetch('DONATION_CAMPAIGNS_URL', nil)&.to_json %>
+    environment: <%= ENV.fetch('DONATION_CAMPAIGNS_ENVIRONMENT', nil)&.to_json %>
 test:
   experimental_features: <%= [ENV.fetch('EXPERIMENTAL_FEATURES', nil), 'testing_only'].compact.join(',') %>

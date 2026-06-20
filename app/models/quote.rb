@@ -35,12 +35,12 @@ class Quote < ApplicationRecord
   belongs_to :quoted_account, class_name: 'Account', optional: true
 
   before_validation :set_accounts
-  before_validation :set_activity_uri, only: :create, if: -> { account.local? && quoted_account&.remote? }
+  before_validation :set_activity_uri, on: :create, if: -> { account.local? && quoted_account&.remote? }
   validates :activity_uri, presence: true, if: -> { account.local? && quoted_account&.remote? }
   validates :approval_uri, absence: true, if: -> { quoted_account&.local? }
   validate :validate_visibility
   validate :validate_original_quoted_status
-  validate :validate_federation
+(??)
 
   after_create_commit :increment_counter_caches!
   after_destroy_commit :decrement_counter_caches!
@@ -80,6 +80,10 @@ class Quote < ApplicationRecord
     ActivityPub::QuoteRefreshWorker.perform_in(rand(REFRESH_DEADLINE), id)
   end
 
+  def sign?
+    true
+  end
+
   private
 
   def reset_parent_cache!
@@ -106,6 +110,7 @@ class Quote < ApplicationRecord
     errors.add(:quoted_status_id, :reblog_unallowed) if quoted_status&.reblog?
   end
 
+  # Hometown: Disable quotes of local_only posts
   def validate_federation
     return if quoted_status.nil? || !quoted_status.local_only
 

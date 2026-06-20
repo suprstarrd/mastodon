@@ -31,6 +31,8 @@ az:
         chosen_languages: İşarələnsə, yalnız seçilmiş dillərdəki göndərişlər ümumi zaman xətlərində nümayiş etdiriləcək
       user_role:
         permissions_as_keys: Bu rola sahib istifadəçilər bunlara erişə biləcək...
+      domain_allow:
+        domain: Bu domen, bu serverdən veri ala biləcək və ondan gələn verilər emal olunacaq və saxlanılanacaq
     labels:
       account:
         show_collections: Profildə izlənilənləri və izləyiciləri göstər

@@ -28,8 +28,16 @@ export async function loadLocale() {
 
     if (!localeFile) throw new Error('Could not load the locale JSON file');
 
-    const { default: localeData } = await localeFile();
+    // Hometown-specific: To reduce conflicts with the locale files, we also
+    // allow for a custom `[language-code].hometown.json` file to exist. If it
+    // does, it's values are merged into the default locale.
+    const hometownOverrideFile = Object.hasOwn(localeFiles, `./${locale}.hometown.json`)
+      ? localeFiles[`./${locale}.hometown.json`]
+      : localeFiles['./en.hometown.json'];
 
-    setLocale({ messages: localeData, locale });
+    const { default: localeData } = await localeFile();
+    const { default: hometownData } = await hometownOverrideFile();
+
+    setLocale({ messages: {...localeData, ...hometownData}, locale });
   });
 }

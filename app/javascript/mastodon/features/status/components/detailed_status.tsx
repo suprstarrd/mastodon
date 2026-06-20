@@ -29,9 +29,12 @@ import StatusContent from 'mastodon/components/status_content';
 import { QuotedStatus } from 'mastodon/components/status_quoted';
 import { VisibilityIcon } from 'mastodon/components/visibility_icon';
 import { Audio } from 'mastodon/features/audio';
+import { CollectionPreviewCard } from 'mastodon/features/collections/components/collection_preview_card';
 import scheduleIdleTask from 'mastodon/features/ui/util/schedule_idle_task';
 import { Video } from 'mastodon/features/video';
 import { useIdentity } from 'mastodon/identity_context';
+import type { CollectionAttachment } from 'mastodon/models/status';
+import { compareUrls } from 'mastodon/utils/compare_urls';
 
 import Card from './card';
 
@@ -55,7 +58,6 @@ export const DetailedStatus: React.FC<{
   pictureInPicture: any;
   onToggleHidden?: (status: any) => void;
   onToggleMediaVisibility?: () => void;
-  statusActivityObjectType?: string;
   ancestors?: number;
   multiColumn?: boolean;
 }> = ({
@@ -72,7 +74,6 @@ export const DetailedStatus: React.FC<{
   pictureInPicture,
   onToggleMediaVisibility,
   onToggleHidden,
-  statusActivityObjectType,
   ancestors = 0,
   multiColumn = false,
 }) => {
@@ -262,13 +263,40 @@ export const DetailedStatus: React.FC<{
       );
     }
   } else if (status.get('card') && !status.get('quote')) {
-    media = (
-      <Card
-        sensitive={status.get('sensitive')}
-        onOpenMedia={onOpenMedia}
-        card={status.get('card')}
-      />
-    );
+    const cardUrl: string = status.getIn(['card', 'url']);
+
+    const taggedCollection = status
+      .get('tagged_collections')
+      .find((item: CollectionAttachment) =>
+        compareUrls(item.get('url'), cardUrl),
+      );
+
+    if (taggedCollection) {
+      media = (
+        <CollectionPreviewCard
+          collection={taggedCollection.toJS()}
+          headingLevel='h2'
+        />
+      );
+    } else {
+      media = (
+        <Card
+          key={`${status.get('id')}-${status.get('edited_at')}`}
+          sensitive={status.get('sensitive')}
+          card={status.get('card')}
+        />
+      );
+    }
+  } else if (status.get('tagged_collections').size) {
+    const firstLinkedCollection = status.get('tagged_collections').first();
+    if (firstLinkedCollection) {
+      media = (
+        <CollectionPreviewCard
+          collection={firstLinkedCollection.toJS()}
+          headingLevel='h2'
+        />
+      );
+    }
   }
 
   if (status.get('application')) {
@@ -301,13 +329,17 @@ export const DetailedStatus: React.FC<{
         to={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}/reblogs`}
         className='detailed-status__link'
       >
-        <span className='detailed-status__reblogs'>
-          <AnimatedNumber value={status.get('reblogs_count')} />
-        </span>
         <FormattedMessage
-          id='status.reblogs'
-          defaultMessage='{count, plural, one {boost} other {boosts}}'
-          values={{ count: status.get('reblogs_count') }}
+          id='status.reblogs_count'
+          defaultMessage='{count, plural, one {{counter} boost} other {{counter} boosts}}'
+          values={{
+            count: status.get('reblogs_count'),
+            counter: (
+              <span className='detailed-status__reblogs'>
+                <AnimatedNumber value={status.get('reblogs_count')} />
+              </span>
+            ),
+          }}
         />
       </Link>
     );
@@ -321,26 +353,34 @@ export const DetailedStatus: React.FC<{
         to={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}/quotes`}
         className='detailed-status__link'
       >
-        <span className='detailed-status__quotes'>
-          <AnimatedNumber value={status.get('quotes_count')} />
-        </span>
         <FormattedMessage
-          id='status.quotes'
-          defaultMessage='{count, plural, one {quote} other {quotes}}'
-          values={{ count: status.get('quotes_count') }}
+          id='status.quotes_count'
+          defaultMessage='{count, plural, one {{counter} quote} other {{counter} quotes}}'
+          values={{
+            count: status.get('quotes_count'),
+            counter: (
+              <span className='detailed-status__quotes'>
+                <AnimatedNumber value={status.get('quotes_count')} />
+              </span>
+            ),
+          }}
         />
       </Link>
     );
   } else {
     quotesLink = (
       <span className='detailed-status__link'>
-        <span className='detailed-status__quotes'>
-          <AnimatedNumber value={status.get('quotes_count')} />
-        </span>
         <FormattedMessage
-          id='status.quotes'
-          defaultMessage='{count, plural, one {quote} other {quotes}}'
-          values={{ count: status.get('quotes_count') }}
+          id='status.quotes_count'
+          defaultMessage='{count, plural, one {{counter} quote} other {{counter} quotes}}'
+          values={{
+            count: status.get('quotes_count'),
+            counter: (
+              <span className='detailed-status__quotes'>
+                <AnimatedNumber value={status.get('quotes_count')} />
+              </span>
+            ),
+          }}
         />
       </span>
     );
@@ -351,13 +391,17 @@ export const DetailedStatus: React.FC<{
       to={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}/favourites`}
       className='detailed-status__link'
     >
-      <span className='detailed-status__favorites'>
-        <AnimatedNumber value={status.get('favourites_count')} />
-      </span>
       <FormattedMessage
-        id='status.favourites'
-        defaultMessage='{count, plural, one {favorite} other {favorites}}'
-        values={{ count: status.get('favourites_count') }}
+        id='status.favourites_count'
+        defaultMessage='{count, plural, one {{counter} favorite} other {{counter} favorites}}'
+        values={{
+          count: status.get('favourites_count'),
+          counter: (
+            <span className='detailed-status__favorites'>
+              <AnimatedNumber value={status.get('favourites_count')} />
+            </span>
+          ),
+        }}
       />
     </Link>
   );
@@ -368,10 +412,13 @@ export const DetailedStatus: React.FC<{
 
   const matchedFilters = status.get('matched_filters');
 
-  const expanded =
-    ((!matchedFilters || showDespiteFilter) &&
-      (!status.get('hidden') || status.get('spoiler_text').length === 0)) ||
-    statusActivityObjectType === 'Article';
+	const isArticle = statusActivityObjectType === 'Article';
+
+  // Hometown: Always display an 'Article' expanded. 
+  const expandedUpstream =
+    (!matchedFilters || showDespiteFilter) &&
+    (!status.get('hidden') || status.get('spoiler_text').length === 0);
+  const expanded = isArticle || expandedUpstream;
 
   return (
     <div style={outerStyle}>
@@ -393,6 +440,7 @@ export const DetailedStatus: React.FC<{
             <FormattedMessage
               id='status.direct_indicator'
               defaultMessage='Private mention'
+              tagName='span'
             />
           </div>
         )}
@@ -425,7 +473,7 @@ export const DetailedStatus: React.FC<{
           />
         )}
 
-        {statusActivityObjectType !== 'Article' &&
+        {!isArticle &&
           status.get('spoiler_text').length > 0 &&
           (!matchedFilters || showDespiteFilter) && (
             <ContentWarning
@@ -435,7 +483,7 @@ export const DetailedStatus: React.FC<{
             />
           )}
 
-        {statusActivityObjectType !== 'Article' && expanded && (
+        {!isArticle && expanded && (
           <>
             <StatusContent
               status={status}
@@ -456,6 +504,7 @@ export const DetailedStatus: React.FC<{
           </>
         )}
 
+	// Hometown: Show the article content.
         {statusActivityObjectType === 'Article' && expanded && (
           <div className='status__content article'>
             <StatusContent
@@ -470,6 +519,7 @@ export const DetailedStatus: React.FC<{
           <div className='detailed-status__meta__line'>
             <a
               className='detailed-status__datetime'
+// Hometown: Add link to status, works with regular toots as well.
               href={status.get('url')}
               target='_blank'
               rel='noopener noreferrer'

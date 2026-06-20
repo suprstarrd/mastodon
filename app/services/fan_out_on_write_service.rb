@@ -79,9 +79,20 @@ class FanOutOnWriteService < BaseService
   end
 
   def notify_mentioned_accounts!
-    @status.active_mentions.where.not(id: @options[:silenced_account_ids] || []).joins(:account).merge(Account.local).select(:id, :account_id).reorder(nil).find_in_batches do |mentions|
+    @status.active_mentions.joins(:account).merge(Account.local).select(:id, :account_id).reorder(nil).find_in_batches do |mentions|
       LocalNotificationWorker.push_bulk(mentions) do |mention|
-        [mention.account_id, mention.id, 'Mention', 'mention']
+        options = { 'silenced' => true } if @options[:silenced_account_ids]&.include?(mention.account_id)
+
+        [mention.account_id, mention.id, 'Mention', 'mention', options].compact
+      end
+
+      next unless update?
+
+      # This may result in duplicate update payloads, but this ensures clients
+      # are aware of edits to posts only appearing in mention notifications
+      # (e.g. private mentions or mentions by people they do not follow)
+      PushUpdateWorker.push_bulk(mentions.filter { |mention| subscribed_to_streaming_api?(mention.account_id) }) do |mention|
+        [mention.account_id, @status.id, "timeline:#{mention.account_id}:notifications", { 'update' => true }]
       end
 
       next unless update?
@@ -169,10 +180,10 @@ class FanOutOnWriteService < BaseService
   end
 
   def anonymous_payload
-    @anonymous_payload ||= Oj.dump(
+    @anonymous_payload ||= JSON.generate({
       event: update? ? :'status.update' : :update,
-      payload: rendered_status
-    )
+      payload: rendered_status,
+    }.as_json)
   end
 
   def rendered_status

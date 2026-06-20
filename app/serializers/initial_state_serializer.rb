@@ -5,7 +5,6 @@ class InitialStateSerializer < ActiveModel::Serializer
 
   attributes :meta, :compose, :accounts,
              :media_attachments, :settings,
-             :max_toot_chars,
              :languages, :features
 
   attribute :critical_updates_pending, if: -> { object&.role&.can?(:view_devops) && SoftwareUpdate.check_enabled? }
@@ -37,6 +36,7 @@ class InitialStateSerializer < ActiveModel::Serializer
       store[:use_pending_items] = object_account_user.setting_use_pending_items
       store[:show_trends]       = Setting.trends && object_account_user.setting_trends
       store[:emoji_style]       = object_account_user.settings['web.emoji_style']
+      store[:wrapstodon]        = wrapstodon
     else
       store[:auto_play_gif] = Setting.auto_play_gif
       store[:display_media] = Setting.display_media
@@ -56,11 +56,10 @@ class InitialStateSerializer < ActiveModel::Serializer
     store = {}
 
     if object.current_account
-      store[:me]                   = object.current_account.id.to_s
-      store[:default_privacy]      = object.visibility || object_account_user.setting_default_privacy
-      store[:default_sensitive]    = object_account_user.setting_default_sensitive
-      store[:default_federation]   = object_account_user.setting_default_federation
-      store[:default_language]     = object_account_user.preferred_posting_language
+      store[:me]                = object.current_account.id.to_s
+      store[:default_privacy]   = object.visibility || object_account_user.setting_default_privacy
+      store[:default_sensitive] = object_account_user.setting_default_sensitive
+      store[:default_language]  = object_account_user.preferred_posting_language
       store[:default_quote_policy] = object_account_user.setting_default_quote_policy
     end
 
@@ -99,6 +98,16 @@ class InitialStateSerializer < ActiveModel::Serializer
   end
 
   private
+  
+  def wrapstodon
+    current_campaign = AnnualReport.current_campaign
+    return if current_campaign.blank?
+
+    {
+      year: current_campaign,
+      state: AnnualReport.new(object.current_account, current_campaign).state,
+    }
+  end
 
   def default_meta_store
     {
@@ -135,7 +144,7 @@ class InitialStateSerializer < ActiveModel::Serializer
   end
 
   def serialized_account(account)
-    ActiveModelSerializers::SerializableResource.new(account, serializer: REST::AccountSerializer)
+    ActiveModelSerializers::SerializableResource.new(account, serializer: REST::AccountSerializer, scope_name: :current_user, scope: object.current_account&.user)
   end
 
   def instance_presenter

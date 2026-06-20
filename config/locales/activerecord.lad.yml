@@ -62,3 +62,7 @@ lad:
           attributes:
             events:
               invalid_permissions: no puedes inkluir evenimientos a los kualos no estas autorizado
+        collection:
+          attributes:
+            tag:
+              unusable: no se pueden uzar

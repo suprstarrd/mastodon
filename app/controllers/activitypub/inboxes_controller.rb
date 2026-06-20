@@ -26,10 +26,10 @@ class ActivityPub::InboxesController < ActivityPub::BaseController
   end
 
   def unknown_affected_account?
-    json = Oj.load(body, mode: :strict)
+    json = JSON.parse(body)
     json.is_a?(Hash) && %w(Delete Update).include?(json['type']) && json['actor'].present? && json['actor'] == value_or_id(json['object']) && !Account.exists?(uri: json['actor'])
-  rescue Oj::ParseError
-    false
+  rescue JSON::ParserError
+      false
   end
 
   def account_required?
@@ -44,7 +44,7 @@ class ActivityPub::InboxesController < ActivityPub::BaseController
     return @body if defined?(@body)
 
     @body = request.body.read
-    @body.force_encoding('UTF-8') if @body.present?
+    @body.presence&.force_encoding('UTF-8')
 
     request.body.rewind if request.body.respond_to?(:rewind)
 

@@ -1,3 +1,4 @@
+
 import { createSelector } from '@reduxjs/toolkit';
 import { List as ImmutableList, Map as ImmutableMap } from 'immutable';
 
@@ -14,7 +15,7 @@ const getStatusInputSelectors = [
   (state, { id }) => state.getIn(['accounts', state.getIn(['statuses', id, 'account'])]),
   (state, { id }) => state.getIn(['accounts', state.getIn(['statuses', state.getIn(['statuses', id, 'reblog']), 'account'])]),
   getFilters,
-  (_, { contextType }) => ['detailed', 'bookmarks', 'favourites'].includes(contextType),
+  (_, { contextType }) => ['detailed', 'bookmarks', 'favourites', 'search'].includes(contextType),
 ];
 
 function getStatusResultFunction(

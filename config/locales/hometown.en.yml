@@ -1,0 +1,8 @@
+---
+en:
+  admin:
+    settings:
+      hometown:
+        title: "Hometown"
+        preamble: "todo"
+        privacy: "todo"

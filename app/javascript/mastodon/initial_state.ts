@@ -1,3 +1,4 @@
+import type { ApiAnnualReportState } from './api/annual_report';
 import type { ApiAccountJSON } from './api_types/accounts';
 
 type InitialStateLanguage = [code: string, name: string, localName: string];
@@ -10,7 +11,6 @@ interface InitialStateMeta {
   admin: string;
   boost_modal?: boolean;
   quick_boosting?: boolean;
-  max_toot_chars?: number;
   delete_modal?: boolean;
   missing_alt_text_modal?: boolean;
   disable_swiping?: boolean;
@@ -48,23 +48,39 @@ interface InitialStateMeta {
   status_page_url: string;
   terms_of_service_enabled: boolean;
   emoji_style?: string;
-  expand_usernames?: boolean;
+  wrapstodon?: InitialStateWrapstodon | null;
 }
 
-interface Role {
+interface IntialStateRole {
   id: string;
   name: string;
   permissions: string;
   color: string;
   highlighted: boolean;
+  collection_limit: number;
+}
+
+interface InitialStateWrapstodon {
+  year: number;
+  state: ApiAnnualReportState;
+}
+
+interface InitialStateCompose {
+  text: string;
+  default_privacy?: string;
+  default_sensitive?: boolean;
+  default_language?: string;
+  default_quote_policy?: string;
+  me?: string;
 }
 
 export interface InitialState {
   accounts: Record<string, ApiAccountJSON>;
   languages: InitialStateLanguage[];
+  compose: InitialStateCompose;
   critical_updates_pending?: boolean;
   meta: InitialStateMeta;
-  role?: Role;
+  role?: IntialStateRole;
   features: string[];
 }
 
@@ -94,8 +110,6 @@ export const autoPlayGif = getMeta('auto_play_gif');
 export const boostModal = getMeta('boost_modal');
 export const quickBoosting = getMeta('quick_boosting');
 export const deleteModal = getMeta('delete_modal');
-// Hometown: max chars
-export const maxChars = getMeta('max_toot_chars') ?? 500;
 export const missingAltTextModal = getMeta('missing_alt_text_modal');
 export const disableSwiping = getMeta('disable_swiping');
 export const disableHoverCards = getMeta('disable_hover_cards');
@@ -103,8 +117,6 @@ export const disabledAccountId = getMeta('disabled_account_id');
 export const displayMedia = getMeta('display_media');
 export const domain = getMeta('domain');
 export const emojiStyle = getMeta('emoji_style') ?? 'auto';
-// Hometown: expand usernames
-export const expandUsernames = getMeta('expand_usernames');
 export const expandSpoilers = getMeta('expand_spoilers');
 export const forceSingleColumn = !getMeta('advanced_layout');
 export const limitedFederationMode = getMeta('limited_federation_mode');
@@ -134,6 +146,7 @@ export const criticalUpdatesPending = initialState?.critical_updates_pending;
 export const statusPageUrl = getMeta('status_page_url');
 export const sso_redirect = getMeta('sso_redirect');
 export const termsOfServiceEnabled = getMeta('terms_of_service_enabled');
+export const wrapstodon = getMeta('wrapstodon');
 
 const displayNames =
   // Intl.DisplayNames can be undefined in old browsers
@@ -151,7 +164,7 @@ export const languages = initialState?.languages.map((lang) => {
     lang[0],
     displayNames?.of(lang[0].replace('zh-YUE', 'yue')) ?? lang[1],
     lang[2],
-  ];
+  ] as InitialStateLanguage;
 });
 
 export function getAccessToken(): string | undefined {
