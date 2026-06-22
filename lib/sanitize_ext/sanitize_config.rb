@@ -57,7 +57,7 @@ class Sanitize
     end
 
     UNSUPPORTED_ELEMENTS_TRANSFORMER = lambda do |env|
-      return unless %w(h1 h2 h3 h4 h5 h6).include?(env[:node_name])
+      return unless %w(h6).include?(env[:node_name])
 
       current_node = env[:node]
 
@@ -83,6 +83,7 @@ class Sanitize
       # next, we find the plain-text description
       is_annotation_with_encoding = lambda do |encoding, node|
         return false unless node.name == 'annotation'
+
         encoding_attr = node.attributes['encoding']
         return false if encoding_attr.nil?
 
@@ -106,10 +107,13 @@ class Sanitize
     end
 
     MASTODON_STRICT = freeze_config(
-      elements: %w(p br span a del s pre blockquote code b strong u i em ul ol li ruby rt rp),
+      elements: %w(p br span a del s pre blockquote code b strong u i em ul ol li ruby rt rp abbr h1 h2 h3 h4 h5 img),
 
       attributes: {
-        'a' => %w(href rel class translate),
+        'abbr' => %w(title),
+        'blockquote' => %w(cite),
+        'img' => %w(src alt),
+        'a' => %w(href rel class translate title),
         'span' => %w(class translate),
         'ol' => %w(start reversed),
         'li' => %w(value),

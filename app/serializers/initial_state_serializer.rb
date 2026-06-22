@@ -5,12 +5,17 @@ class InitialStateSerializer < ActiveModel::Serializer
 
   attributes :meta, :compose, :accounts,
              :media_attachments, :settings,
+             :max_toot_chars,
              :languages, :features
 
   attribute :critical_updates_pending, if: -> { object&.role&.can?(:view_devops) && SoftwareUpdate.check_enabled? }
 
   has_one :push_subscription, serializer: REST::WebPushSubscriptionSerializer
   has_one :role, serializer: REST::RoleSerializer
+
+  def max_toot_chars
+    StatusLengthValidator::MAX_CHARS
+  end
 
   def meta
     store = default_meta_store
@@ -51,10 +56,11 @@ class InitialStateSerializer < ActiveModel::Serializer
     store = {}
 
     if object.current_account
-      store[:me]                = object.current_account.id.to_s
-      store[:default_privacy]   = object.visibility || object_account_user.setting_default_privacy
-      store[:default_sensitive] = object_account_user.setting_default_sensitive
-      store[:default_language]  = object_account_user.preferred_posting_language
+      store[:me]                   = object.current_account.id.to_s
+      store[:default_privacy]      = object.visibility || object_account_user.setting_default_privacy
+      store[:default_sensitive]    = object_account_user.setting_default_sensitive
+      store[:default_federation]   = object_account_user.setting_default_federation
+      store[:default_language]     = object_account_user.preferred_posting_language
       store[:default_quote_policy] = object_account_user.setting_default_quote_policy
     end
 

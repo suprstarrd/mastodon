@@ -27,6 +27,8 @@
 #  edited_at                    :datetime
 #  trendable                    :boolean
 #  ordered_media_attachment_ids :bigint(8)        is an Array
+#  local_only                   :boolean
+#  activity_pub_type            :string
 #  fetched_replies_at           :datetime
 #  quote_approval_policy        :integer          default(0), not null
 #
@@ -123,6 +125,7 @@ class Status < ApplicationRecord
   scope :reply_to_account, -> { where(arel_table[:in_reply_to_account_id].eq arel_table[:account_id]) }
   scope :not_replying_to_account, ->(account) { where.not(in_reply_to_account: account) }
   scope :without_reblogs, -> { where(statuses: { reblog_of_id: nil }) }
+  scope :without_local_only, -> { where(local_only: [false, nil]) }
   scope :tagged_with, ->(tag_ids) { joins(:statuses_tags).where(statuses_tags: { tag_id: tag_ids }) }
   scope :not_excluded_by_account, ->(account) { where.not(account_id: account.excluded_from_timeline_account_ids) }
   scope :not_domain_blocked_by_account, ->(account) { account.excluded_from_timeline_domains.blank? ? left_outer_joins(:account) : left_outer_joins(:account).merge(Account.not_domain_blocked_by_account(account)) }
@@ -150,6 +153,8 @@ class Status < ApplicationRecord
   before_validation :set_reblog
   before_validation :set_conversation
   before_validation :set_local
+
+  before_create :set_locality
 
   around_create Mastodon::Snowflake::Callbacks
 
@@ -206,6 +211,10 @@ class Status < ApplicationRecord
 
   def local?
     attributes['local'] || uri.nil?
+  end
+
+  def local_only?
+    local_only
   end
 
   def in_reply_to_local_account?
@@ -469,6 +478,10 @@ class Status < ApplicationRecord
 
   def set_local
     self.local = account.local?
+  end
+
+  def set_locality
+    self.local_only = reblog.local_only if reblog?
   end
 
   def update_statistics

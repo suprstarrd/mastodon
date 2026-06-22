@@ -1,5 +1,9 @@
 # Federation
 
+## ActivityPub federation in Hometown
+
+Hometown federates just like Mastodon, so the document below (identical to Mastodon's) still applies. The main difference is that any given `Note` object will have a `localOnly` property that is a boolean. While other servers will never see this boolean set to anything but `false` (since by definition these messages are not federated), _clients_ will see this property and can now render a post differently based on whether it is local-only.
+
 ## Supported federation protocols and standards
 
 - [ActivityPub](https://www.w3.org/TR/activitypub/) (Server-to-Server)

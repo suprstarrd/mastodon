@@ -55,6 +55,7 @@ export const DetailedStatus: React.FC<{
   pictureInPicture: any;
   onToggleHidden?: (status: any) => void;
   onToggleMediaVisibility?: () => void;
+  statusActivityObjectType?: string;
   ancestors?: number;
   multiColumn?: boolean;
 }> = ({
@@ -71,6 +72,7 @@ export const DetailedStatus: React.FC<{
   pictureInPicture,
   onToggleMediaVisibility,
   onToggleHidden,
+  statusActivityObjectType,
   ancestors = 0,
   multiColumn = false,
 }) => {
@@ -367,8 +369,9 @@ export const DetailedStatus: React.FC<{
   const matchedFilters = status.get('matched_filters');
 
   const expanded =
-    (!matchedFilters || showDespiteFilter) &&
-    (!status.get('hidden') || status.get('spoiler_text').length === 0);
+    ((!matchedFilters || showDespiteFilter) &&
+      (!status.get('hidden') || status.get('spoiler_text').length === 0)) ||
+    statusActivityObjectType === 'Article';
 
   return (
     <div style={outerStyle}>
@@ -422,15 +425,17 @@ export const DetailedStatus: React.FC<{
           />
         )}
 
-        {(!matchedFilters || showDespiteFilter) && (
-          <ContentWarning
-            status={status}
-            expanded={expanded}
-            onClick={handleExpandedToggle}
-          />
-        )}
+        {statusActivityObjectType !== 'Article' &&
+          status.get('spoiler_text').length > 0 &&
+          (!matchedFilters || showDespiteFilter) && (
+            <ContentWarning
+              status={status}
+              expanded={expanded}
+              onClick={handleExpandedToggle}
+            />
+          )}
 
-        {expanded && (
+        {statusActivityObjectType !== 'Article' && expanded && (
           <>
             <StatusContent
               status={status}
@@ -451,11 +456,21 @@ export const DetailedStatus: React.FC<{
           </>
         )}
 
+        {statusActivityObjectType === 'Article' && expanded && (
+          <div className='status__content article'>
+            <StatusContent
+              status={status}
+              onTranslate={handleTranslate}
+              {...(statusContentProps as any)}
+            />
+          </div>
+        )}
+
         <div className='detailed-status__meta'>
           <div className='detailed-status__meta__line'>
             <a
               className='detailed-status__datetime'
-              href={`/@${status.getIn(['account', 'acct'])}/${status.get('id')}`}
+              href={status.get('url')}
               target='_blank'
               rel='noopener noreferrer'
             >

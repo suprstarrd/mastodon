@@ -76,6 +76,7 @@
   "account.posts_with_replies": "Mga Post at Reply",
   "account.remove_from_followers": "Alisin si {name} sa mga follower",
   "account.report": "I-ulat si/ang @{name}",
+  "account.requested": "Naghihintay ng pag-apruba. I-click upang ikansela ang hiling sa pagsunod",
   "account.requested_follow": "Hinihiling ni {name} na sundan ka",
   "account.requests_to_follow_you": "Mga Request para i-fillow ka",
   "account.share": "Ibahagi ang profile ni @{name}",

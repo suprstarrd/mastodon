@@ -11,6 +11,7 @@ import ImmutablePropTypes from 'react-immutable-proptypes';
 import { debounce } from 'lodash';
 
 import { AltTextBadge } from 'mastodon/components/alt_text_badge';
+import { NoAltTextBadge } from 'mastodon/components/no_alt_text_badge';
 import { Blurhash } from 'mastodon/components/blurhash';
 import { SpoilerButton } from 'mastodon/components/spoiler_button';
 import { formatTime } from 'mastodon/features/video';
@@ -104,14 +105,17 @@ class Item extends PureComponent {
     }
 
     const description = attachment.getIn(['translation', 'description']) || attachment.get('description');
+    const hasMediaDescription = description?.length > 0;
 
-    if (description?.length > 0) {
+    if (hasMediaDescription) {
       badges.push(<AltTextBadge key='alt' description={description} />);
+    } else {
+      badges.push(<NoAltTextBadge key='no-alt' />);
     }
 
     if (attachment.get('type') === 'unknown') {
       return (
-        <div className={classNames('media-gallery__item', { standalone, 'media-gallery__item--tall': height === 100, 'media-gallery__item--wide': width === 100 })} key={attachment.get('id')}>
+        <div className={classNames('media-gallery__item', { standalone, 'media-gallery__item--tall': height === 100, 'media-gallery__item--wide': width === 100, 'media-missing-description': !hasMediaDescription  })} key={attachment.get('id')}>
           <a className='media-gallery__item-thumbnail' href={attachment.get('remote_url') || attachment.get('url')} style={{ cursor: 'pointer' }} title={description} lang={lang} target='_blank' rel='noopener'>
             <Blurhash
               hash={attachment.get('blurhash')}
@@ -140,7 +144,7 @@ class Item extends PureComponent {
 
       thumbnail = (
         <a
-          className='media-gallery__item-thumbnail'
+          className={classNames('media-gallery__item-thumbnail', { "media-missing-description": !hasMediaDescription })}
           href={attachment.get('remote_url') || originalUrl}
           onClick={this.handleClick}
           target='_blank'
@@ -171,7 +175,7 @@ class Item extends PureComponent {
       thumbnail = (
         <div className={classNames('media-gallery__gifv', { autoplay: autoPlay })}>
           <video
-            className='media-gallery__item-gifv-thumbnail'
+            className={classNames('media-gallery__item-gifv-thumbnail', { "media-missing-description": !hasMediaDescription })}
             aria-label={description}
             lang={lang}
             role='application'

@@ -95,7 +95,9 @@ class StatusContent extends PureComponent {
     // from react-router
     match: PropTypes.object.isRequired,
     location: PropTypes.object.isRequired,
-    history: PropTypes.object.isRequired
+    history: PropTypes.object.isRequired,
+    // from hometown
+    statusActivityObjectType: PropTypes.string,
   };
 
   _updateStatusLinks () {
@@ -187,6 +189,7 @@ class StatusContent extends PureComponent {
     const { status, intl, statusContent } = this.props;
 
     const renderReadMore = this.props.onClick && status.get('collapsed');
+    const renderReadArticle = status.get('activity_pub_type') === 'Article' && !status.get('collapsed') && this.props.onClick;
     const contentLocale = intl.locale.replace(/[_-].*/, '');
     const targetLanguages = this.props.languages?.get(status.get('language') || 'und');
     const renderTranslate = this.props.onTranslate && this.props.identity.signedIn && ['public', 'unlisted'].includes(status.get('visibility')) && status.get('search_index').trim().length > 0 && targetLanguages?.includes(contentLocale);
@@ -204,6 +207,12 @@ class StatusContent extends PureComponent {
       </button>
     );
 
+    const readArticleButton = renderReadArticle && (
+      <button className='status__content__read-more-button' onClick={this.props.onClick} key='read-more'>
+        <FormattedMessage id='status.read_article' defaultMessage='Read article' /><Icon id='angle-right' icon={ChevronRightIcon} fixedWidth />
+      </button>
+    );
+
     const translateButton = renderTranslate && (
       <TranslateButton onClick={this.handleTranslate} translation={status.get('translation')} />
     );
@@ -212,7 +221,17 @@ class StatusContent extends PureComponent {
       <Poll pollId={status.get('poll')} status={status} lang={language} />
     );
 
-    if (this.props.onClick) {
+    if (this.props.statusActivityObjectType === 'Article') {
+      const title = status.get('title');
+      const summary = status.get('spoilerHtml');
+      return (
+        <>
+          {title && <div className='status__content article'><h2>Title: {status.get('title')}</h2></div>}
+          {summary && <div className='status__content article'><em>Summary: {status.get('spoiler_text')}</em></div>}
+          {readArticleButton}
+        </>
+      );
+    } else if (this.props.onClick) {
       return (
         <>
           <div
@@ -235,6 +254,8 @@ class StatusContent extends PureComponent {
           </div>
 
           {readMoreButton}
+
+          {readArticleButton}
         </>
       );
     } else {

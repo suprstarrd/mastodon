@@ -2,7 +2,7 @@
 # important settings can be changed from the admin interface.
 
 defaults: &defaults
-  site_title: Mastodon
+  site_title: Hometown
   site_short_description: ''
   site_description: ''
   site_extended_description: ''
@@ -17,10 +17,13 @@ defaults: &defaults
   local_topic_feed_access: 'public'
   remote_topic_feed_access: 'public'
   show_staff_badge: true
+  default_federation: true
   preview_sensitive_media: false
   noindex: false
+  norss: false
   theme: 'system'
   trends: true
+  trends_as_landing_page: false
   trendable_by_default: false
   disallowed_hashtags: # space separated string or list of hashtags without the hash
   bootstrap_timeline_accounts: ''

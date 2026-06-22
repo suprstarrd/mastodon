@@ -39,7 +39,11 @@ class ActivityPub::Parser::StatusParser
 
   def text
     if @object['content'].present?
-      @object['content']
+      if @object['type'] == 'Article'
+        article_format(@object['content'])
+      else
+        @object['content']
+      end
     elsif content_language_map?
       @object['contentMap'].values.first
     end
@@ -58,6 +62,8 @@ class ActivityPub::Parser::StatusParser
   def spoiler_text
     if @object['summary'].present?
       @object['summary']
+    elsif @object['preview'].present? && @object['preview']['type'] == 'Note' && @object['preview']['content'].present?
+      @object['preview']['content']
     elsif summary_language_map?
       @object['summaryMap'].values.first
     end
