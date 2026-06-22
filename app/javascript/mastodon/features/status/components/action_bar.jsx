@@ -213,6 +213,7 @@ class ActionBar extends PureComponent {
     const publicStatus       = ['public', 'unlisted'].includes(status.get('visibility'));
     const pinnableStatus     = ['public', 'unlisted', 'private'].includes(status.get('visibility'));
     const mutingConversation = status.get('muted');
+    const federated          = !status.get('local_only');
     const account            = status.get('account');
     const writtenByMe        = status.getIn(['account', 'id']) === me;
     const isRemote           = status.getIn(['account', 'username']) !== status.getIn(['account', 'acct']);
@@ -225,7 +226,7 @@ class ActionBar extends PureComponent {
 
     menu.push({ text: intl.formatMessage(messages.copy), action: this.handleCopy });
 
-    if (publicStatus && 'share' in navigator) {
+    if (publicStatus && 'share' in navigator && federated) {
       menu.push({ text: intl.formatMessage(messages.share), action: this.handleShare });
     }
 

@@ -44,6 +44,11 @@ class MoveUserSettings < ActiveRecord::Migration[6.1]
       must_be_following: 'interactions.must_be_following',
       must_be_following_dm: 'interactions.must_be_following_dm',
     }.freeze,
+
+    # Hometown-specific fields
+    norss: 'norss',
+    default_federation: 'default_federation',
+    expand_usernames: 'web.expand_usernames',
   }.freeze
 
   class LegacySetting < ApplicationRecord

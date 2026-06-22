@@ -59,7 +59,7 @@ export default class Mastodon extends PureComponent {
                 <BodyScrollLock />
               </Router>
 
-              <Helmet defaultTitle={title} titleTemplate={`%s - ${title}`} />
+              <Helmet defaultTitle={title} titleTemplate={`${title} - %s`} />
             </ErrorBoundary>
           </ReduxProvider>
         </IntlProvider>

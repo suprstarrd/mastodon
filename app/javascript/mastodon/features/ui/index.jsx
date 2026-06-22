@@ -86,7 +86,7 @@ import { WrappedSwitch, WrappedRoute } from './util/react_router_helpers';
 import '../../components/status';
 
 const messages = defineMessages({
-  beforeUnload: { id: 'ui.beforeunload', defaultMessage: 'Your draft will be lost if you leave Mastodon.' },
+  beforeUnload: { id: 'ui.beforeunload', defaultMessage: 'Your draft will be lost if you leave.' },
 });
 
 const mapStateToProps = state => ({
@@ -149,6 +149,10 @@ class SwitchingColumnsArea extends PureComponent {
       redirect = <Redirect from='/' to={`/@${initialState.accounts[owner].username}`} exact />;
     } else if (trendsEnabled && landingPage === 'trends') {
       redirect = <Redirect from='/' to='/explore' exact />;
+      // Hometown: if signed-out landing page is the about page, don't render the app shell, just redirect
+    } else if (window.location.pathname === '/' || window.location.pathname === '') {
+      window.location = '/about';
+      return null;
     } else if (localLiveFeedAccess === 'public' && landingPage === 'local_feed') {
       redirect = <Redirect from='/' to='/public/local' exact />;
     } else {

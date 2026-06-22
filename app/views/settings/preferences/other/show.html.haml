@@ -9,6 +9,9 @@
 
   = f.simple_fields_for :settings, current_user.settings do |ff|
     .fields-group
+      = ff.input :noindex, wrapper: :with_label, label: I18n.t('simple_form.labels.defaults.setting_noindex'), hint: t('simple_form.hints.defaults.setting_noindex_html')
+
+    .fields-group
       = ff.input :aggregate_reblogs,
                  hint: I18n.t('simple_form.hints.defaults.setting_aggregate_reblogs'),
                  label: I18n.t('simple_form.labels.defaults.setting_aggregate_reblogs'),

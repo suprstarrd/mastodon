@@ -15,6 +15,7 @@ import { missingAltTextModal } from 'mastodon/initial_state';
 import AutosuggestInput from 'mastodon/components/autosuggest_input';
 import AutosuggestTextarea from 'mastodon/components/autosuggest_textarea';
 import { Button } from 'mastodon/components/button';
+import FederationDropdownContainer from '../containers/federation_dropdown_container';
 import EmojiPickerDropdown from '../containers/emoji_picker_dropdown_container';
 import PollButtonContainer from '../containers/poll_button_container';
 import SpoilerButtonContainer from '../containers/spoiler_button_container';
@@ -49,6 +50,7 @@ class ComposeForm extends ImmutablePureComponent {
     suggestions: ImmutablePropTypes.list,
     spoiler: PropTypes.bool,
     privacy: PropTypes.string,
+    federation: PropTypes.bool,
     spoilerText: PropTypes.string,
     focusDate: PropTypes.instanceOf(Date),
     caretPosition: PropTypes.number,
@@ -65,6 +67,7 @@ class ComposeForm extends ImmutablePureComponent {
     onChangeSpoilerText: PropTypes.func.isRequired,
     onPaste: PropTypes.func.isRequired,
     onPickEmoji: PropTypes.func.isRequired,
+    disableFederation: PropTypes.func.isRequired,
     autoFocus: PropTypes.bool,
     withoutNavigation: PropTypes.bool,
     anyMedia: PropTypes.bool,
@@ -190,6 +193,10 @@ class ComposeForm extends ImmutablePureComponent {
 
   componentDidUpdate (prevProps) {
     this._updateFocusAndSelection(prevProps);
+
+    if (this.props.quoteOfLocalOnly && prevProps.quoteOfLocalOnly !== this.props.quoteOfLocalOnly) {
+      this.props.disableFederation();
+    }
   }
 
   _updateFocusAndSelection = (prevProps) => {
@@ -251,6 +258,7 @@ class ComposeForm extends ImmutablePureComponent {
   render () {
     const { intl, onPaste, autoFocus, withoutNavigation, maxChars, isSubmitting } = this.props;
     const { highlighted } = this.state;
+    const disabled = this.props.quoteOfLocalOnly || this.props.isEditing;
 
     return (
       <form className='compose-form' onSubmit={this.handleSubmit}>
@@ -263,6 +271,7 @@ class ComposeForm extends ImmutablePureComponent {
 
           <div className='compose-form__dropdowns'>
             <VisibilityButton disabled={this.props.isEditing} />
+            <FederationDropdownContainer disabled={disabled} />
             <LanguageDropdown />
           </div>
 

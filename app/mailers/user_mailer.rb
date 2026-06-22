@@ -26,7 +26,7 @@ class UserMailer < Devise::Mailer
 
     I18n.with_locale(locale) do
       mail to: @resource.unconfirmed_email.presence || @resource.email,
-           subject: I18n.t(@resource.pending_reconfirmation? ? 'devise.mailer.reconfirmation_instructions.subject' : 'devise.mailer.confirmation_instructions.subject', instance: @instance),
+           subject: I18n.t(@resource.pending_reconfirmation? ? 'devise.mailer.reconfirmation_instructions.subject' : 'devise.mailer.confirmation_instructions.subject', instance: @instance, title: Setting.site_title),
            template_name: @resource.pending_reconfirmation? ? 'reconfirmation_instructions' : 'confirmation_instructions'
     end
   end
@@ -119,7 +119,7 @@ class UserMailer < Devise::Mailer
     return unless @resource.active_for_authentication?
 
     I18n.with_locale(locale(use_current_locale: true)) do
-      mail subject: I18n.t('devise.mailer.webauthn_credential.added.subject')
+      mail subject: I18n.t('devise.mailer.webauthn_credential.added.subject', title: Setting.site_title)
     end
   end
 
@@ -130,7 +130,7 @@ class UserMailer < Devise::Mailer
     return unless @resource.active_for_authentication?
 
     I18n.with_locale(locale(use_current_locale: true)) do
-      mail subject: I18n.t('devise.mailer.webauthn_credential.deleted.subject')
+      mail subject: I18n.t('devise.mailer.webauthn_credential.deleted.subject', title: Setting.site_title)
     end
   end
 
@@ -146,7 +146,7 @@ class UserMailer < Devise::Mailer
     @has_statuses = @resource.account.statuses.exists?
 
     I18n.with_locale(locale) do
-      mail subject: default_i18n_subject
+      mail subject: default_i18n_subject(title: Setting.site_title)
     end
   end
 
@@ -157,7 +157,7 @@ class UserMailer < Devise::Mailer
     return unless @resource.active_for_authentication?
 
     I18n.with_locale(locale) do
-      mail subject: default_i18n_subject
+      mail subject: default_i18n_subject(title: Setting.site_title)
     end
   end
 
@@ -167,7 +167,7 @@ class UserMailer < Devise::Mailer
     @statuses = @warning.statuses.includes(:account, :preloadable_poll, :media_attachments, active_mentions: [:account])
 
     I18n.with_locale(locale) do
-      mail subject: I18n.t("user_mailer.warning.subject.#{@warning.action}", acct: "@#{user.account.local_username_and_domain}")
+      mail subject: I18n.t("user_mailer.warning.subject.#{@warning.action}", acct: "@#{user.account.local_username_and_domain}", title: Setting.site_title)
     end
   end
 
@@ -176,7 +176,7 @@ class UserMailer < Devise::Mailer
     @appeal   = appeal
 
     I18n.with_locale(locale) do
-      mail subject: default_i18n_subject(date: l(@appeal.created_at))
+      mail subject: default_i18n_subject(date: l(@appeal.created_at), title: Setting.site_title)
     end
   end
 
@@ -185,7 +185,7 @@ class UserMailer < Devise::Mailer
     @appeal   = appeal
 
     I18n.with_locale(locale) do
-      mail subject: default_i18n_subject(date: l(@appeal.created_at))
+      mail subject: default_i18n_subject(date: l(@appeal.created_at), title: Setting.site_title)
     end
   end
 
@@ -197,7 +197,7 @@ class UserMailer < Devise::Mailer
     @timestamp  = timestamp.to_time.utc
 
     I18n.with_locale(locale) do
-      mail subject: default_i18n_subject
+      mail subject: default_i18n_subject(title: Setting.site_title)
     end
   end
 
@@ -209,7 +209,7 @@ class UserMailer < Devise::Mailer
     @timestamp  = timestamp.to_time.utc
 
     I18n.with_locale(locale) do
-      mail subject: default_i18n_subject
+      mail subject: default_i18n_subject(title: Setting.site_title)
     end
   end
 
@@ -219,7 +219,7 @@ class UserMailer < Devise::Mailer
     @markdown = Redcarpet::Markdown.new(Redcarpet::Render::HTML, escape_html: true, no_images: true)
 
     I18n.with_locale(locale) do
-      mail subject: default_i18n_subject
+      mail subject: default_i18n_subject(title: Setting.site_title)
     end
   end
 
@@ -228,14 +228,14 @@ class UserMailer < Devise::Mailer
     @announcement = announcement
 
     I18n.with_locale(locale) do
-      mail subject: default_i18n_subject
+      mail subject: default_i18n_subject(title: Setting.site_title)
     end
   end
 
   private
 
   def default_devise_subject
-    I18n.t(:subject, scope: ['devise.mailer', action_name])
+    I18n.t(:subject, scope: ['devise.mailer', action_name], title: Setting.site_title)
   end
 
   def set_instance

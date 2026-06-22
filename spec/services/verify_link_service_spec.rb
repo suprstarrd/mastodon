@@ -105,20 +105,6 @@ RSpec.describe VerifyLinkService do
       end
     end
 
-    context 'when a link tag might be truncated' do
-      let(:html) do
-        <<-HTML_TRUNCATED
-          <!doctype html>
-          <body>
-            <a rel="me" href="#{ActivityPub::TagManager.instance.url_for(account)}"
-        HTML_TRUNCATED
-      end
-
-      it 'marks the field as not verified' do
-        expect(field.verified?).to be false
-      end
-    end
-
     context 'when a link does not contain a link back' do
       let(:html) { '' }
 

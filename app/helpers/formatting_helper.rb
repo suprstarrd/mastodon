@@ -44,6 +44,10 @@ module FormattingHelper
     html_aware_format(account.note, account.local?)
   end
 
+  def article_format(text)
+    html_aware_format(text, false)
+  end
+
   def account_field_value_format(field, with_rel_me: true)
     if field.verified? && !field.account.local?
       TextFormatter.shortened_link(field.value_for_verification)

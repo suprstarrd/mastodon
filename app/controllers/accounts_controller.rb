@@ -25,6 +25,12 @@ class AccountsController < ApplicationController
       format.rss do
         expires_in 1.minute, public: true
 
+        # Hometown: Do not display any entries in the RSS feed if it's disabled
+        if @account&.user&.setting_norss == true
+          @statuses = []
+          next
+        end
+
         limit     = params[:limit].present? ? [params[:limit].to_i, PAGE_SIZE_MAX].min : PAGE_SIZE
         @statuses = filtered_statuses.without_reblogs.limit(limit)
         @statuses = preload_collection(@statuses, Status)
@@ -48,7 +54,12 @@ class AccountsController < ApplicationController
   end
 
   def default_statuses
-    @account.statuses.distributable_visibility
+    # Hometown: local-only posts are not meant for RSS feeds, even if they are public.
+    if current_user.nil?
+      @account.statuses.without_local_only.where(visibility: [:public, :unlisted])
+    else
+      @account.statuses.where(visibility: [:public, :unlisted])
+    end
   end
 
   def only_media_scope

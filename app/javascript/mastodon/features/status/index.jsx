@@ -593,6 +593,7 @@ class Status extends ImmutablePureComponent {
                   showMedia={this.state.showMedia}
                   onToggleMediaVisibility={this.handleToggleMediaVisibility}
                   pictureInPicture={pictureInPicture}
+                  statusActivityObjectType={status.get('activity_pub_type')}
                   ancestors={this.props.ancestorsIds.length}
                   multiColumn={multiColumn}
                 />

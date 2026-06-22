@@ -1188,7 +1188,7 @@
 
   a {
     color: $secondary-text-color;
-    text-decoration: none;
+    text-decoration: underline;
     unicode-bidi: isolate;
 
     &:hover {
@@ -1512,6 +1512,10 @@
     outline-offset: -2px;
     background: color.change($ui-highlight-color, $alpha: 0.05);
   }
+}
+
+.status--has-quote .quote-inline {
+  display: none;
 }
 
 .status {

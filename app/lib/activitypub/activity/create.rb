@@ -49,6 +49,7 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     @quote_uri            = nil
     @quote_approval_uri   = nil
 
+    process_inline_images if @object['content'].present? && @object['type'] == 'Article'
     process_status_params
     process_tags
     process_quote
@@ -100,7 +101,7 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
       account: @account,
       text: @status_parser.processed_text,
       language: @status_parser.language,
-      spoiler_text: @status_parser.processed_spoiler_text,
+      spoiler_text: @status_parser.processed_spoiler_text || (@object['type'] == 'Article' && text_from_name),
       created_at: @status_parser.created_at,
       edited_at: @status_parser.edited_at && @status_parser.edited_at != @status_parser.created_at ? @status_parser.edited_at : nil,
       override_timestamps: @options[:override_timestamps],
@@ -112,8 +113,70 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
       media_attachment_ids: attachment_ids,
       ordered_media_attachment_ids: attachment_ids,
       poll: process_poll,
+      activity_pub_type: @object['type'],
       quote_approval_policy: @status_parser.quote_policy,
     }
+  end
+
+  class Handler < ::Ox::Sax
+    attr_reader :srcs, :alts
+
+    def initialize
+      super
+      @stack = []
+      @srcs = []
+      @alts = {}
+    end
+
+    def start_element(element_name)
+      @stack << [element_name, {}]
+    end
+
+    def end_element(_element_name)
+      self_name, self_attributes = @stack[-1]
+      if self_name == :img && !self_attributes[:src].nil?
+        @srcs << self_attributes[:src]
+        @alts[self_attributes[:src]] = self_attributes[:alt]
+      end
+      @stack.pop
+    end
+
+    def attr(attribute_name, attribute_value)
+      _name, attributes = @stack.last
+      attributes[attribute_name] = attribute_value
+      attributes
+    end
+  end
+
+  def process_inline_images
+    handler = Handler.new
+
+    Ox.sax_parse(handler, @object['content'])
+    handler.srcs.each do |src|
+      # Handle images where the src is formatted as "/foo/bar.png"
+      # we assume that the `url` field is populated which lets us infer
+      # the protocol and domain of the _original_ article, as though
+      # we were looking at it via a web browser
+      if src[0] == '/' && !@object['url'].nil?
+        site = Addressable::URI.parse(@object['url']).site
+        src = site + src
+      end
+
+      if skip_download?
+        @object['content'].gsub!(src, '')
+        next
+      end
+
+      media_attachment = MediaAttachment.create(account: @account, remote_url: src, description: handler.alts[src], focus: nil)
+      media_attachment.download_file!
+      media_attachment.save
+      if unsupported_media_type?(media_attachment.file.content_type)
+        @object['content'].gsub!(src, '')
+        media_attachment.delete
+      else
+        @object['content'].gsub!(src, media_attachment.file.url(:small))
+      end
+    end
   end
 
   def process_audience
@@ -399,6 +462,18 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
       @replied_to_status ||= status_from_uri(@object['inReplyToAtomUri']) if @object['inReplyToAtomUri'].present?
       @replied_to_status
     end
+  end
+
+  def text_from_name
+    if @object['name'].present?
+      @object['name']
+    elsif name_language_map?
+      @object['nameMap'].values.first
+    end
+  end
+
+  def name_language_map?
+    @object['nameMap'].is_a?(Hash) && !@object['nameMap'].empty?
   end
 
   def in_reply_to_uri

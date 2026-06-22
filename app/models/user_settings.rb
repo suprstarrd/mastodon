@@ -17,6 +17,11 @@ class UserSettings
   setting :default_privacy, default: nil, in: %w(public unlisted private)
   setting :default_quote_policy, default: 'public', in: %w(public followers nobody)
 
+  # Hometown-specific: Opt-out of RSS feeds for public posts
+  setting :norss, default: false
+  # Hometown: New posts should federate by default
+  setting :default_federation, default: true
+
   setting_inverse_alias :indexable, :noindex
 
   namespace :web do
@@ -37,6 +42,9 @@ class UserSettings
     setting :display_media, default: 'default', in: %w(default show_all hide_all)
     setting :auto_play, default: false
     setting :emoji_style, default: 'auto', in: %w(auto native twemoji)
+
+    # Hometown: Show full username (including domain) for remote users
+    setting :expand_usernames, default: true
   end
 
   namespace :notification_emails do

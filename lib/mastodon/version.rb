@@ -28,6 +28,10 @@ module Mastodon
       version_configuration[:metadata]
     end
 
+    def hometown_version
+      'hometown-1.2.1'
+    end
+
     def to_a
       [major, minor, patch].compact
     end
@@ -36,6 +40,7 @@ module Mastodon
       components = [to_a.join('.')]
       components << "-#{prerelease}" if prerelease.present?
       components << "+#{build_metadata}" if build_metadata.present?
+      components << "+#{hometown_version}"
       components.join
     end
 

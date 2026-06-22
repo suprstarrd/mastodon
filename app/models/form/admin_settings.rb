@@ -29,6 +29,8 @@ class Form::AdminSettings
     show_domain_blocks_rationale
     allow_referrer_origin
     noindex
+    norss
+    default_federation
     require_invite_text
     media_cache_retention_period
     content_cache_retention_period
@@ -63,6 +65,8 @@ class Form::AdminSettings
     trends
     trendable_by_default
     noindex
+    norss
+    default_federation
     require_invite_text
     captcha_enabled
     authorized_fetch
