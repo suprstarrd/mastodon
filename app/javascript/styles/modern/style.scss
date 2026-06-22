@@ -481,6 +481,7 @@ button.icon-button {
     padding-top: var(--top);
     box-sizing: border-box;
     transition: padding 0.4s;
+    flex-direction: row-reverse;
     --top: 20px;
   }
 }

@@ -100,6 +100,11 @@ class AdvancedTextFormatter < TextFormatter
   private
 
   def format_markdown(html)
+    pinktext = html.scan(/(\n|^)(>[^\s].*(?:\n>[^\s].*)*)/)
+    pinktext.each do |match|
+      new_content = match[1].gsub("\n", '<br/>')
+      html = html.sub(match[1], "<font color=\"#e574ff\">#{new_content}</font>")
+    end
     html = markdown_formatter.render(html)
     html.delete("\r").delete("\n")
   end

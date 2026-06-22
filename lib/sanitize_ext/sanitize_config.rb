@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../mfm'
+
 class Sanitize
   module Config
     HTTP_PROTOCOLS = %w(
@@ -31,6 +33,7 @@ class Sanitize
         next true if /^(h|p|u|dt|e)-/.match?(e) # microformats classes
         next true if /^(mention|hashtag)$/.match?(e) # semantic classes
         next true if /^(ellipsis|invisible)$/.match?(e) # link formatting classes
+        next true if /^mfm(-[\w\d]+)?$/.match?(e) # mfm misskey flavored markdown classes
         next true if e == 'quote-inline'
       end
 
@@ -117,17 +120,21 @@ class Sanitize
     end
 
     MASTODON_STRICT = freeze_config(
-      elements: %w(p br span a abbr del s pre blockquote code b strong u sub sup i em h1 h2 h3 h4 h5 ul ol li ruby rt rp),
+      elements: %w(p br span a abbr del s pre font blockquote code b strong u sub sup i em h1 h2 h3 h4 h5 ul ol li ruby rt rp),
 
       attributes: {
         :all => %w(lang),
         'a' => %w(href rel class title translate),
         'abbr' => %w(title),
-        'span' => %w(class translate),
+        'span' => %w(class translate style),
+        'font' => %w(color),
         'blockquote' => %w(cite),
         'ol' => %w(start reversed),
         'li' => %w(value),
-        'p' => %w(class),
+      },
+
+      css: {
+        properties: %w(color),
       },
 
       add_attributes: {
@@ -143,6 +150,7 @@ class Sanitize
       },
 
       transformers: [
+        MFM::TRANSFORMER,
         ALLOWED_CLASS_TRANSFORMER,
         IMG_TAG_TRANSFORMER,
         TRANSLATE_TRANSFORMER,
