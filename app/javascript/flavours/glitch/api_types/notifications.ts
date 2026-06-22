@@ -4,6 +4,7 @@ import type { AccountWarningAction } from 'flavours/glitch/models/notification_g
 
 import type { ApiAccountJSON } from './accounts';
 import type { ApiCollectionJSON } from './collections';
+import type { ApiStatusReactionJSON } from './reaction';
 import type { ApiReportJSON } from './reports';
 import type { ApiStatusJSON } from './statuses';
 
@@ -12,6 +13,7 @@ export const allNotificationTypes: NotificationType[] = [
   'follow',
   'follow_request',
   'favourite',
+  'reaction',
   'reblog',
   'mention',
   'quote',
@@ -39,6 +41,7 @@ export type NotificationWithStatusType =
 
 export type NotificationType =
   | NotificationWithStatusType
+  | 'reaction'
   | 'follow'
   | 'follow_request'
   | 'moderation_warning'
@@ -137,6 +140,12 @@ interface ModerationWarningNotificationJSON extends BaseNotificationJSON {
   moderation_warning: ApiAccountWarningJSON;
 }
 
+interface ReactionNotificationJSON extends BaseNotificationJSON {
+  type: 'reaction';
+  status: ApiStatusJSON | null;
+  reaction: ApiStatusReactionJSON;
+}
+
 export interface ApiAccountRelationshipSeveranceEventJSON {
   id: string;
   type: 'account_suspension' | 'domain_block' | 'user_domain_block';
@@ -166,12 +175,19 @@ interface AnnualReportNotificationGroupJSON extends BaseNotificationGroupJSON {
   annual_report: ApiAnnualReportEventJSON;
 }
 
+interface ReactionNotificationGroupJSON extends BaseNotificationGroupJSON {
+  type: 'reaction';
+  status_id: string | null;
+  reaction?: ApiStatusReactionJSON;
+}
+
 export type ApiNotificationJSON =
   | SimpleNotificationJSON
   | ReportNotificationJSON
   | AccountRelationshipSeveranceNotificationJSON
   | NotificationWithStatusJSON
   | ModerationWarningNotificationJSON
+  | ReactionNotificationJSON
   | AddedToCollectionNotificationJSON
   | CollectionUpdateNotificationJSON;
 
@@ -182,6 +198,7 @@ export type ApiNotificationGroupJSON =
   | NotificationGroupWithStatusJSON
   | ModerationWarningNotificationGroupJSON
   | AnnualReportNotificationGroupJSON
+  | ReactionNotificationGroupJSON
   | AddedToCollectionNotificationGroupJSON
   | CollectionUpdateNotificationGroupJSON;
 

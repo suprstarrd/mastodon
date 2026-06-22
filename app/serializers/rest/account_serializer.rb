@@ -17,6 +17,7 @@ class REST::AccountSerializer < ActiveModel::Serializer
 
   attribute :suspended, if: :suspended?
   attribute :silenced, key: :limited, if: :silenced?
+  attribute :remote_limit_reason, if: :remote_limit_reason?
   attribute :noindex, if: :local?
 
   attribute :memorial, if: :memorial?
@@ -172,6 +173,26 @@ class REST::AccountSerializer < ActiveModel::Serializer
 
   def moved_and_not_nested?
     object.moved?
+  end
+
+  def remote_limit_reason?
+    object.silenced? && object.pretty_acct != object.username && show_rationale_in_response?
+  end
+
+  def current_user?
+    !current_user.nil?
+  end
+
+  def show_rationale_in_response?
+    always_show_rationale? || show_rationale_for_user?
+  end
+
+  def always_show_rationale?
+    Setting.show_domain_blocks_rationale == 'all'
+  end
+
+  def show_rationale_for_user?
+    Setting.show_domain_blocks_rationale == 'users' && current_user? && current_user.functional_or_moved?
   end
 
   def feature_approval

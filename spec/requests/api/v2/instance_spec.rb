@@ -18,7 +18,7 @@ RSpec.describe 'Instances' do
 
         expect(response.parsed_body)
           .to be_present
-          .and include(title: 'Mastodon Glitch Edition')
+          .and include(title: 'Chuckya')
           .and include_api_versions
           .and include_configuration_limits
       end
@@ -36,7 +36,7 @@ RSpec.describe 'Instances' do
 
         expect(response.parsed_body)
           .to be_present
-          .and include(title: 'Mastodon Glitch Edition')
+          .and include(title: 'Chuckya')
           .and include_api_versions
           .and include_configuration_limits
       end
@@ -93,7 +93,8 @@ RSpec.describe 'Instances' do
     def include_api_versions
       include(
         api_versions: include(
-          mastodon: anything
+          mastodon: anything,
+          chuckya: anything
         )
       )
     end

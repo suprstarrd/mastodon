@@ -1,3 +1,41 @@
+# Besties mastodon
+
+A fork of a fork of a fork
+
+Adds:
+
+- Pinktext
+
+---
+
+# <img src="https://github.com/TheEssem/mastodon/raw/main/public/chuckya.svg" width="128"> Chuckya
+
+Chuckya is a close-to-upstream soft fork of Mastodon Glitch Edition (more commonly known as glitch-soc) that aims to introduce more experimental features/fixes with the goal of making the overall experience more enjoyable. Although it's mainly developed for and used on the [wetdry.world](https://wetdry.world) instance, it can be deployed by any server admin as a drop-in, backwards-compatible replacement for Mastodon.
+
+Here are some of the changes compared to glitch-soc:
+
+- Emoji reactions (glitch-soc/mastodon#2462)
+- Bubble timeline
+- GIF picker (originally from [koyu.space](https://github.com/koyuspace/mastodon), rewritten for Chuckya)
+- Mastodon Modern theme (licensed under CC-BY-SA 4.0, [original repo](https://git.gay/freeplay/Mastodon-Modern))
+- Configurable media attachment limits
+- Additional moderation tools for admins
+- Command-line interface for managing username blocks
+- Polls can have only one option
+- Allows configuring status trend half-life time
+- Allows dashes in custom emote names
+- Emojis can be put side-by-side
+- Minor media attachment tweaks
+
+Changes previously in Chuckya that are now in vanilla Mastodon:
+
+- Unicode emojis use [`jdecked/twemoji`](https://github.com/jdecked/twemoji) v15 graphics (mastodon/mastodon#28404)
+- Polls can be posted alongside media
+
+Setup instructions are the same as [glitch-soc's](https://glitch-soc.github.io/docs); just replace the glitch-soc repo URL with `https://github.com/TheEssem/mastodon`.
+
+Original glitch-soc readme is below.
+
 # Mastodon Glitch Edition
 
 [![Ruby Testing](https://github.com/glitch-soc/mastodon/actions/workflows/test-ruby.yml/badge.svg)](https://github.com/glitch-soc/mastodon/actions/workflows/test-ruby.yml)

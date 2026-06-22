@@ -3,6 +3,7 @@
 require_relative 'base'
 
 require_relative 'accounts'
+require_relative 'bubble_domains'
 require_relative 'cache'
 require_relative 'canonical_email_blocks'
 require_relative 'domains'
@@ -18,6 +19,7 @@ require_relative 'search'
 require_relative 'settings'
 require_relative 'statuses'
 require_relative 'upgrade'
+require_relative 'username_blocks'
 
 module Mastodon::CLI
   class Main < Base
@@ -62,6 +64,12 @@ module Mastodon::CLI
 
     desc 'canonical_email_blocks SUBCOMMAND ...ARGS', 'Manage canonical e-mail blocks'
     subcommand 'canonical_email_blocks', CanonicalEmailBlocks
+
+    desc 'bubble_domains SUBCOMMAND ...ARGS', 'Manage bubble domains'
+    subcommand 'bubble_domains', BubbleDomains
+
+    desc 'username_blocks SUBCOMMAND ...ARGS', 'Manage username blocks'
+    subcommand 'username_blocks', UsernameBlocks
 
     desc 'maintenance SUBCOMMAND ...ARGS', 'Various maintenance utilities'
     subcommand 'maintenance', Maintenance

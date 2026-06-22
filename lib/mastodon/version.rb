@@ -47,6 +47,7 @@ module Mastodon
       {
         mastodon: 10,
         glitch: 1,
+        chuckya: 5,
       }
     end
 

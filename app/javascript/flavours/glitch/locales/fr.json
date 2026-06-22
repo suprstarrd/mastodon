@@ -41,7 +41,9 @@
   "keyboard_shortcuts.secondary_toot": "Envoyer le post en utilisant les paramètres secondaires de confidentialité",
   "moved_to_warning": "Ce compte a déménagé vers {moved_to_link} et ne peut donc plus accepter de nouveaux abonné·e·s.",
   "navigation_bar.app_settings": "Paramètres de l'application",
+  "notification.reaction": "{name} a réagi·e à votre message",
   "notifications.column_settings.filter_bar.show_bar": "Afficher la barre de filtre",
+  "notifications.column_settings.reaction": "Réactions:",
   "settings.always_show_spoilers_field": "Toujours activer le champ de rédaction de l'avertissement de contenu",
   "settings.close": "Fermer",
   "settings.compose_box_opts": "Zone de rédaction",
@@ -114,5 +116,6 @@
   "status.in_reply_to": "Ce post est une réponse",
   "status.is_poll": "Ce post est un sondage",
   "status.local_only": "Visible uniquement depuis votre instance",
+  "status.react": "Réagir",
   "status.show_filter_reason": "Afficher quand même"
 }

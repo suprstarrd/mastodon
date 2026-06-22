@@ -31,14 +31,16 @@ const selectUserAvatar = createAppSelector(
   (accounts, myId) => accounts.get(myId)?.avatar_static,
 );
 
+const colCount = (size: number) => Math.max(Math.ceil(Math.sqrt(size)), 2);
+
 export const Upload: React.FC<{
   id: string;
   dragging?: boolean;
   draggable?: boolean;
   overlay?: boolean;
-  tall?: boolean;
-  wide?: boolean;
-}> = ({ id, dragging, draggable = true, overlay, tall, wide }) => {
+  size?: number;
+  index?: number;
+}> = ({ id, dragging, draggable = true, overlay, size, index }) => {
   const dispatch = useAppDispatch();
   const media = useAppSelector((state) =>
     (
@@ -75,6 +77,23 @@ export const Upload: React.FC<{
   const y = (focusY / -2 + 0.5) * 100;
   const missingDescription =
     ((media.get('description') as string | undefined) ?? '').length === 0;
+
+  let tall = false;
+  let wide = false;
+
+  if (size != null && index != null) {
+    const cols = colCount(size);
+    const remaining = ((-size % cols) + cols) % cols;
+    const largeCount = Math.floor(remaining / 3); // width=2, height=2
+    const mediumCount = remaining % 3; // height=2
+
+    if (size === 1 || index < largeCount) {
+      wide = true;
+      tall = true;
+    } else if (size === 2 || index < largeCount + mediumCount) {
+      tall = true;
+    }
+  }
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -128,8 +147,13 @@ export const Upload: React.FC<{
             className='icon-button'
             onClick={handleFocalPointClick}
           >
-            <Icon id='edit' icon={EditIcon} />{' '}
-            <FormattedMessage id='upload_form.edit' defaultMessage='Edit' />
+            <Icon id='edit' icon={EditIcon} />
+            {(size == null || size < 5) && (
+              <>
+                {' '}
+                <FormattedMessage id='upload_form.edit' defaultMessage='Edit' />
+              </>
+            )}
           </button>
         </div>
 

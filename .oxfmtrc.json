@@ -37,6 +37,11 @@
     "/app/javascript/flavours/glitch/locales/*.json",
     "/config/locales-glitch",
 
+    // Keep formatting of modern theme
+    "app/javascript/styles/modern/style.scss",
+    "app/javascript/flavours/glitch/styles/modern/style.scss",
+    "app/javascript/flavours/glitch/styles/modern/glitch-fixes.scss",
+
     // do not reformat JS files as this will change too many files and cause merge conflicts with open PRs and forks
     "app/javascript/**/*.js",
     "app/javascript/**/*.jsx",

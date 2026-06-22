@@ -20,6 +20,7 @@ de:
         setting_show_followers_count: Zeige deine Follower-Anzahl
         setting_skin: Skin
         setting_system_emoji_font: Systemschriftart für Emojis verwenden (nur für Glitch-Variante)
+        setting_visible_reactions: Anzahl der sichtbaren Emoji-Reaktionen
       notification_emails:
         trending_link: Neuer angesagter Link muss überprüft werden
         trending_status: Neuer angesagter Post muss überprüft werden

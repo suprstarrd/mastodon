@@ -100,6 +100,7 @@ class REST::InstanceSerializer < ActiveModel::Serializer
       },
 
       polls: {
+        allow_media: true,
         max_options: PollOptionsValidator::MAX_OPTIONS,
         max_characters_per_option: PollOptionsValidator::MAX_OPTION_CHARS,
         min_expiration: PollExpirationValidator::MIN_EXPIRATION,
@@ -110,17 +111,29 @@ class REST::InstanceSerializer < ActiveModel::Serializer
         enabled: TranslationService.configured?,
       },
 
+      gif_search: {
+        enabled: GifService.configured?,
+        provider: GifService.provider,
+      },
+
+      reactions: {
+        max_reactions: StatusReactionValidator::LIMIT,
+      },
+
       timelines_access: {
         live_feeds: {
           local: Setting.local_live_feed_access,
+          bubble: Setting.bubble_live_feed_access,
           remote: Setting.remote_live_feed_access,
         },
         hashtag_feeds: {
           local: Setting.local_topic_feed_access,
+          bubble: Setting.bubble_topic_feed_access,
           remote: Setting.remote_topic_feed_access,
         },
         trending_link_feeds: {
           local: Setting.local_topic_feed_access,
+          bubble: Setting.bubble_topic_feed_access,
           remote: Setting.remote_topic_feed_access,
         },
       },
