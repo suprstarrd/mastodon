@@ -3,6 +3,12 @@
 require 'rails_helper'
 
 RSpec.describe TagFeed do
+  before do
+    Setting.local_topic_feed_access = 'public'
+    Setting.remote_topic_feed_access = 'public'
+    Setting.bubble_topic_feed_access = 'public'
+  end
+
   describe '#get' do
     let(:account) { Fabricate(:account) }
     let(:tag_cats) { Fabricate(:tag, name: 'cats') }
@@ -65,6 +71,20 @@ RSpec.describe TagFeed do
 
       results = described_class.new(tag_cats, nil).get(20)
       expect(results).to include(status)
+    end
+
+    context 'when the feed contains a local-only status' do
+      let!(:status) { Fabricate(:status, tags: [tag_cats], local_only: true) }
+
+      it 'does not show local-only statuses without a viewer' do
+        results = described_class.new(tag_cats, nil).get(20)
+        expect(results).to_not include(status)
+      end
+
+      it 'shows local-only statuses given a viewer' do
+        results = described_class.new(tag_cats, account).get(20)
+        expect(results).to include(status)
+      end
     end
 
     context 'when both local_topic_feed_access and remote_topic_feed_access are disabled' do

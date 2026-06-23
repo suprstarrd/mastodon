@@ -163,6 +163,7 @@ module ApplicationHelper
       class: html_classes,
       'data-contrast': contrast.parameterize,
       'data-color-scheme': page_color_scheme.parameterize,
+      'data-user-flavour': current_flavour.parameterize,
     }
 
     base[:'data-system-theme'] = 'true' if page_color_scheme == 'auto'
@@ -285,6 +286,11 @@ module ApplicationHelper
 
   def within_authorization_flow?
     session[:user_return_to].present? && Rails.application.routes.recognize_path(session[:user_return_to])[:controller] == 'oauth/authorizations'
+  end
+
+  # glitch-soc addition to handle the multiple flavors
+  def flavoured_vite_typescript_tag(pack_name, flavour: nil, **)
+    vite_typescript_tag("#{Themes.instance.flavour(flavour || current_flavour)['pack_directory'].delete_prefix('app/javascript/')}/#{pack_name}", **)
   end
 
   private

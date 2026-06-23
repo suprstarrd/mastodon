@@ -10,12 +10,18 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     dereference_object!
 
     create_status
+  rescue Mastodon::RejectPayload
+    reject_payload!
   end
 
   private
 
+  def reject_pattern?
+    Setting.reject_pattern.present? && @object['content']&.match?(Setting.reject_pattern)
+  end
+
   def create_status
-    return reject_payload! if unsupported_object_type? || non_matching_uri_hosts?(@account.uri, object_uri) || tombstone_exists? || !related_to_local_activity?
+    return reject_payload! if unsupported_object_type? || non_matching_uri_hosts?(@account.uri, object_uri) || tombstone_exists? || !related_to_local_activity? || reject_pattern?
 
     with_redis_lock("create:#{object_uri}") do
       Status.uncached do
@@ -55,9 +61,15 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     @quote_approval_uri   = nil
 
     process_status_params
+
+    return reject_payload! if MediaAttachment.where(id: @params[:media_attachment_ids]).where(blurhash: Setting.reject_blurhash.split(/\r?\n/).compact_blank.uniq).present?
+
     process_tags
     process_quote
     process_audience
+
+    # Reject the status unless all the hashtags are usable:
+    return reject_payload! unless @tags.all?(&:usable?)
 
     ApplicationRecord.transaction do
       @status = Status.create!(@params.merge(quote: @quote))
@@ -99,7 +111,7 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
       object: @object
     )
 
-    attachment_ids = process_attachments.take(Status::MEDIA_ATTACHMENTS_LIMIT).map(&:id)
+    attachment_ids = process_attachments.take(Status::REMOTE_MEDIA_ATTACHMENTS_LIMIT).map(&:id)
 
     @params = {
       uri: @status_parser.uri,
@@ -147,7 +159,7 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
       # If there is at least one silent mention, then the status can be considered
       # as a limited-audience status, and not strictly a direct message, but only
       # if we considered a direct message in the first place
-      @params[:visibility] = :limited if @params[:visibility] == :direct
+      @params[:visibility] = :limited if @params[:visibility] == :direct && !@object['directMessage']
     end
 
     # Accounts that are tagged but are not in the audience are not
@@ -159,7 +171,7 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     return if @status.mentions.find_by(account_id: @options[:delivered_to_account_id])
 
     @status.mentions.create(account: delivered_to_account, silent: true)
-    @status.update(visibility: :limited) if @status.direct_visibility?
+    @status.update(visibility: :limited) if @status.direct_visibility? && !@object['directMessage']
 
     return unless delivered_to_account.following?(@account)
 
@@ -303,7 +315,7 @@ class ActivityPub::Activity::Create < ActivityPub::Activity
     as_array(@object['attachment']).each do |attachment|
       media_attachment_parser = ActivityPub::Parser::MediaAttachmentParser.new(attachment)
 
-      next if media_attachment_parser.remote_url.blank? || media_attachments.size >= Status::MEDIA_ATTACHMENTS_LIMIT
+      next if media_attachment_parser.remote_url.blank? || media_attachments.size >= Status::REMOTE_MEDIA_ATTACHMENTS_LIMIT
 
       begin
         media_attachment = MediaAttachment.create(

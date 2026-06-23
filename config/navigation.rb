@@ -22,6 +22,12 @@ SimpleNavigation::Configuration.run do |navigation|
       s.item :other, safe_join([material_symbol('tune'), t('preferences.other')]), settings_preferences_other_path
     end
 
+    n.item :flavours, safe_join([material_symbol('brush'), t('settings.flavours')]), settings_flavours_path do |flavours|
+      Themes.instance.flavours.each do |flavour|
+        flavours.item flavour.to_sym, safe_join([material_symbol('star-fill'), t("flavours.#{flavour}.name", default: flavour)]), settings_flavour_path(flavour)
+      end
+    end
+
     n.item :relationships, safe_join([material_symbol('groups'), t('settings.relationships')]), relationships_path, if: -> { current_user.functional? && !self_destruct } do |s|
       s.item :current, safe_join([material_symbol('groups'), t('settings.relationships')]), relationships_path
       s.item :severed_relationships, safe_join([material_symbol('link_off'), t('settings.severed_relationships')]), severed_relationships_path
@@ -79,6 +85,7 @@ SimpleNavigation::Configuration.run do |navigation|
       s.item :webhooks, safe_join([material_symbol('inbox'), t('admin.webhooks.title')]), admin_webhooks_path, highlights_on: %r{/admin/webhooks}, if: -> { current_user.can?(:manage_webhooks) }
       s.item :fasp, safe_join([material_symbol('extension'), t('admin.fasp.title')]), admin_fasp_providers_path, highlights_on: %r{/admin/fasp}, if: -> { current_user.can?(:manage_federation) } if Mastodon::Feature.fasp_enabled?
       s.item :relays, safe_join([material_symbol('captive_portal'), t('admin.relays.title')]), admin_relays_path, highlights_on: %r{/admin/relays}, if: -> { !limited_federation_mode? && current_user.can?(:manage_federation) }
+      s.item :bubble_domains, safe_join([material_symbol('bubble_chart'), t('admin.bubble_domains.title')]), admin_bubble_domains_path, highlights_on: %r{/admin/bubble_domains}, if: -> { current_user.can?(:manage_federation) }
     end
 
     n.item :sidekiq, safe_join([material_symbol('diamond'), 'Sidekiq']), sidekiq_path, link_html: { target: 'sidekiq' }, if: -> { current_user.can?(:view_devops) }

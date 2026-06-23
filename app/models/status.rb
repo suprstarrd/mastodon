@@ -5,11 +5,13 @@
 # Table name: statuses
 #
 #  id                           :bigint(8)        not null, primary key
+#  content_type                 :string
 #  deleted_at                   :datetime
 #  edited_at                    :datetime
 #  fetched_replies_at           :datetime
 #  language                     :string
 #  local                        :boolean
+#  local_only                   :boolean
 #  ordered_media_attachment_ids :bigint(8)        is an Array
 #  quote_approval_policy        :integer          default(0), not null
 #  reply                        :boolean          default(FALSE), not null
@@ -59,7 +61,8 @@ class Status < ApplicationRecord
     quote: { status: { account: [:account_stat, user: :role] } },
   ].freeze
 
-  MEDIA_ATTACHMENTS_LIMIT = 4
+  MEDIA_ATTACHMENTS_LIMIT = (ENV['MAX_MEDIA_ATTACHMENTS'] || 4).to_i
+  REMOTE_MEDIA_ATTACHMENTS_LIMIT = (ENV['MAX_REMOTE_MEDIA_ATTACHMENTS'] || 16).to_i
 
   rate_limit by: :account, family: :statuses
 
@@ -94,6 +97,7 @@ class Status < ApplicationRecord
   has_many :mentions, dependent: :destroy, inverse_of: :status
   has_many :mentioned_accounts, through: :mentions, source: :account, class_name: 'Account'
   has_many :media_attachments, dependent: :nullify
+  has_many :status_reactions, inverse_of: :status, dependent: :destroy
   has_many :tagged_objects, dependent: :destroy
   has_many :quotes, foreign_key: 'quoted_status_id', inverse_of: :quoted_status, dependent: :nullify
 
@@ -122,6 +126,7 @@ class Status < ApplicationRecord
   validates_with StatusLengthValidator
   validates_with DisallowedHashtagsValidator
   validates :reblog, uniqueness: { scope: :account }, if: :reblog?
+  validates :content_type, inclusion: { in: %w(text/plain text/markdown text/html) }, allow_nil: true
 
   accepts_nested_attributes_for :poll
 
@@ -141,7 +146,7 @@ class Status < ApplicationRecord
   scope :without_reblogs, -> { where(statuses: { reblog_of_id: nil }) }
   scope :tagged_with, ->(tag_ids) { joins(:statuses_tags).where(statuses_tags: { tag_id: tag_ids }) }
   scope :not_excluded_by_account, ->(account) { where.not(account_id: account.excluded_from_timeline_account_ids) }
-  scope :not_domain_blocked_by_account, ->(account) { account.excluded_from_timeline_domains.blank? ? left_outer_joins(:account) : left_outer_joins(:account).merge(Account.not_domain_blocked_by_account(account)) }
+  scope :not_domain_blocked_by_account, ->(account, bubble_only = false) { account.excluded_from_timeline_domains.blank? ? left_outer_joins(:account) : left_outer_joins(:account).merge(Account.not_domain_blocked_by_account(account, bubble_only)) }
   scope :tagged_with_all, lambda { |tag_ids|
     Array(tag_ids).map(&:to_i).reduce(self) do |result, id|
       result.where(<<~SQL.squish, tag_id: id)
@@ -153,6 +158,10 @@ class Status < ApplicationRecord
     where('NOT EXISTS (SELECT * FROM statuses_tags forbidden WHERE forbidden.status_id = statuses.id AND forbidden.tag_id IN (?))', tag_ids)
   }
   scope :without_empty_attachments, -> { where(ordered_media_attachment_ids: nil).or(where.not(ordered_media_attachment_ids: [])) }
+
+  scope :not_local_only, -> { where(local_only: [false, nil]) }
+
+  scope :bubble, -> { left_outer_joins(:account).where(accounts: { domain: BubbleDomain.bubble_domains }) }
 
   after_create_commit :trigger_create_webhooks
   after_update_commit :trigger_update_webhooks
@@ -167,6 +176,8 @@ class Status < ApplicationRecord
   before_validation :set_reblog
   before_validation :set_conversation
   before_validation :set_local
+
+  before_create :set_local_only
 
   around_create Mastodon::Snowflake::Callbacks
 
@@ -205,6 +216,10 @@ class Status < ApplicationRecord
 
   def local?
     attributes['local'] || uri.nil?
+  end
+
+  def bubble?
+    BubbleDomain.in_bubble?(account.domain)
   end
 
   def in_reply_to_local_account?
@@ -284,6 +299,20 @@ class Status < ApplicationRecord
     @emojis = CustomEmoji.from_text(fields.join(' '), account.domain)
   end
 
+  def reactions(account_id = nil)
+    grouped_ordered_status_reactions.select(
+      [:name, :custom_emoji_id, 'COUNT(*) as count'].tap do |values|
+        values << StatusReaction.value_for_reaction_me_column(account_id)
+      end
+    ).to_a.tap do |records|
+      ActiveRecord::Associations::Preloader.new(records: records, associations: :custom_emoji).call
+    end
+  end
+
+  def media_attachments_limit
+    local? ? MEDIA_ATTACHMENTS_LIMIT : REMOTE_MEDIA_ATTACHMENTS_LIMIT
+  end
+
   def ordered_media_attachments
     if ordered_media_attachment_ids.nil?
       # NOTE: sort Ruby-side to avoid hitting the database when the status is
@@ -292,7 +321,7 @@ class Status < ApplicationRecord
     else
       map = media_attachments.index_by(&:id)
       ordered_media_attachment_ids.filter_map { |media_attachment_id| map[media_attachment_id] }
-    end.take(MEDIA_ATTACHMENTS_LIMIT)
+    end.take(media_attachments_limit)
   end
 
   def replies_count
@@ -305,6 +334,10 @@ class Status < ApplicationRecord
 
   def favourites_count
     status_stat&.favourites_count || 0
+  end
+
+  def reactions_count
+    status_stat&.reactions_count || 0
   end
 
   def quotes_count
@@ -358,6 +391,42 @@ class Status < ApplicationRecord
   end
 
   class << self
+    def as_direct_timeline(account, limit = 20, max_id = nil, since_id = nil)
+      # direct timeline is mix of direct message from_me and to_me.
+      # 2 queries are executed with pagination.
+      # constant expression using arel_table is required for partial index
+
+      # _from_me part does not require any timeline filters
+      query_from_me = where(account_id: account.id)
+        .direct_visibility
+        .limit(limit)
+        .order(id: :desc)
+
+      # _to_me part requires mute and block filter.
+      # FIXME: may we check mutes.hide_notifications?
+      query_to_me = Status
+        .direct_visibility
+        .joins(:mentions)
+        .where(mentions: { account_id: account.id })
+        .limit(limit)
+        .order('mentions.status_id DESC')
+        .not_excluded_by_account(account)
+
+      if max_id.present?
+        query_from_me = query_from_me.where(id: ...max_id)
+        query_to_me = query_to_me.where(mentions: { status_id: ...max_id })
+      end
+
+      if since_id.present?
+        query_from_me = query_from_me.where('statuses.id > ?', since_id)
+        query_to_me = query_to_me.where('mentions.status_id > ?', since_id)
+      end
+
+      # TODO: use a single query?
+      ids = (query_from_me.pluck(:id) + query_to_me.pluck(:id)).sort.uniq.reverse.take(limit)
+      Status.where(id: ids)
+    end
+
     def favourites_map(status_ids, account_id)
       Favourite.select(:status_id).where(status_id: status_ids).where(account_id: account_id).to_h { |f| [f.status_id, true] }
     end
@@ -416,6 +485,14 @@ class Status < ApplicationRecord
 
   private
 
+  def grouped_ordered_status_reactions
+    status_reactions
+      .group(:status_id, :name, :custom_emoji_id)
+      .order(
+        Arel.sql('MIN(created_at)').asc
+      )
+  end
+
   def update_status_stat!(attrs)
     return if marked_for_destruction? || destroyed?
 
@@ -437,6 +514,18 @@ class Status < ApplicationRecord
 
   def set_poll_id
     update_column(:poll_id, poll.id) if association(:poll).loaded? && poll.present?
+  end
+
+  def set_local_only
+    return unless account.domain.nil? && !attribute_changed?(:local_only)
+
+    self.local_only = true if thread&.local_only? && local_only.nil?
+
+    if reblog?
+      self.local_only = reblog.local_only
+    elsif local_only.nil?
+      self.local_only = false
+    end
   end
 
   def set_conversation

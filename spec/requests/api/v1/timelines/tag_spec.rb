@@ -13,6 +13,12 @@ RSpec.describe 'Tag' do
       get "/api/v1/timelines/tag/#{hashtag}", headers: headers, params: params
     end
 
+    before do
+      Setting.local_topic_feed_access = 'public'
+      Setting.remote_topic_feed_access = 'public'
+      Setting.bubble_topic_feed_access = 'public'
+    end
+
     shared_examples 'a successful request to the tag timeline' do
       it 'returns the expected statuses', :aggregate_failures do
         subject
@@ -99,7 +105,7 @@ RSpec.describe 'Tag' do
 
     context 'when the instance does not allow public preview' do
       before do
-        Form::AdminSettings.new(local_topic_feed_access: 'authenticated', remote_topic_feed_access: 'authenticated').save
+        Form::AdminSettings.new(local_topic_feed_access: 'authenticated', remote_topic_feed_access: 'authenticated', bubble_topic_feed_access: 'authenticated').save
       end
 
       it_behaves_like 'forbidden for wrong scope', 'profile'

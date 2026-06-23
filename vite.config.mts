@@ -20,7 +20,7 @@ import manifestSRI from 'vite-plugin-manifest-sri';
 import svgr from 'vite-plugin-svgr';
 
 import { MastodonAssetsManifest } from './config/vite/plugin-assets-manifest';
-import { MastodonThemes } from './config/vite/plugin-mastodon-themes';
+import { GlitchThemes as MastodonThemes } from './config/vite/plugin-glitch-themes';
 import { MastodonNameLookup } from './config/vite/plugin-name-lookup';
 import { MastodonServiceWorkerChunkPaths } from './config/vite/plugin-sw-chunk-paths';
 import { MastodonServiceWorkerLocales } from './config/vite/plugin-sw-locales';

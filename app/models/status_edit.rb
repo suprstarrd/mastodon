@@ -5,6 +5,7 @@
 # Table name: status_edits
 #
 #  id                           :bigint(8)        not null, primary key
+#  content_type                 :string
 #  media_descriptions           :text             is an Array
 #  ordered_media_attachment_ids :bigint(8)        is an Array
 #  poll_options                 :string           is an Array
@@ -92,7 +93,7 @@ class StatusEdit < ApplicationRecord
         map = status.media_attachments.index_by(&:id)
         ordered_media_attachment_ids.map.with_index { |media_attachment_id, index| PreservedMediaAttachment.new(media_attachment: map[media_attachment_id], description: media_descriptions[index]) }
       end
-    end.take(Status::MEDIA_ATTACHMENTS_LIMIT)
+    end.take(status.media_attachments_limit)
   end
 
   def proper

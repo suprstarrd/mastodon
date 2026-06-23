@@ -38,7 +38,9 @@ class ActivityPub::Parser::StatusParser
   end
 
   def text
-    if @object['content'].present?
+    if @object['source'].present? && @object['source']['mediaType'] == 'text/x.misskeymarkdown'
+      MisskeyFlavoredMarkdown.new(@object['source']['content'], tags: as_array(@object['tag'])).to_html
+    elsif @object['content'].present?
       @object['content']
     elsif content_language_map?
       @object['contentMap'].values.first
@@ -105,6 +107,8 @@ class ActivityPub::Parser::StatusParser
       :unlisted
     elsif audience_to.include?(@options[:followers_collection])
       :private
+    elsif direct_message == false
+      :limited
     else
       :direct
     end
@@ -195,6 +199,10 @@ class ActivityPub::Parser::StatusParser
     elsif summary_language_map?
       @object['summaryMap'].keys.first
     end
+  end
+
+  def direct_message
+    @object['directMessage']
   end
 
   def audience_to

@@ -37,7 +37,7 @@ class BackupService < BaseService
 
       file.write(statuses.map do |status|
         serializer = status.reblog? ? ActivityPub::AnnounceNoteSerializer : ActivityPub::CreateNoteSerializer
-        item = serialize_payload(status, serializer)
+        item = serialize_payload(status, serializer, allow_local_only: true)
         item.delete(:@context)
 
         unless item[:type] == 'Announce' || item[:object][:attachment].blank?
@@ -194,7 +194,8 @@ class BackupService < BaseService
     ActiveModelSerializers::SerializableResource.new(
       object,
       serializer: serializer,
-      adapter: ActivityPub::Adapter
+      adapter: ActivityPub::Adapter,
+      allow_local_only: true
     ).as_json
   end
 

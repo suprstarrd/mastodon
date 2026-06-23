@@ -17,6 +17,7 @@
   /follow_requests
   /followed_tags
   /getting-started
+  /getting-started-misc
   /home
   /keyboard-shortcuts
   /links/(*any)
@@ -28,6 +29,7 @@
   /profile/(*any)
   /public
   /public/local
+  /public/bubble
   /public/remote
   /publish
   /search

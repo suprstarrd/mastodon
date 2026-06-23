@@ -100,6 +100,20 @@ export const baseConfig = [
       'jsdoc/require-returns-description': 'off',
       'jsdoc/require-returns': 'off',
 
+      // Forbid imports from vanilla in glitch flavour
+      'import/no-restricted-paths': [
+        'error',
+        {
+          zones: [
+            {
+              target: 'app/javascript/flavours/glitch/',
+              from: 'app/javascript/mastodon/',
+              message: 'Import from /flavours/glitch/ instead',
+            },
+          ],
+        },
+      ],
+
       'promise/always-return': 'off',
       'promise/catch-or-return': [
         'error',
@@ -250,6 +264,11 @@ export default tseslint.config([
       'app/javascript/mastodon/features/emoji/unicode_to_unified_name.js',
       'app/javascript/mastodon/features/emoji/emoji_compressed.js',
       'app/javascript/mastodon/features/emoji/unicode_to_filename.js',
+      'app/javascript/flavours/glitch/common.js',
+      'app/javascript/flavours/glitch/entrypoints/common.js',
+      'app/javascript/flavours/glitch/features/emoji/unicode_to_unified_name.js',
+      'app/javascript/flavours/glitch/features/emoji/emoji_compressed.js',
+      'app/javascript/flavours/glitch/features/emoji/unicode_to_filename.js',
       'app/javascript/mastodon/service_worker/web_push_locales.js',
       '**/*.config.js',
       '**/.*rc.js',

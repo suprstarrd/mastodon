@@ -154,7 +154,7 @@ namespace :tests do
         exit(1)
       end
 
-      unless Setting.theme == 'default'
+      unless Setting.skin == 'default'
         puts 'Default theme setting not migrated as expected'
         exit(1)
       end
@@ -183,7 +183,8 @@ namespace :tests do
         VALUES
           (7, NULL, NULL, 'timeline_preview', E'--- false\n', now(), now()),
           (8, NULL, NULL, 'trends_as_landing_page', E'--- false\n', now(), now()),
-          (9, NULL, NULL, 'theme', E'--- system', now(), now());
+          (9, NULL, NULL, 'theme', E'--- system', now(), now()),
+          (1000, NULL, NULL, 'skin', E'--- system', now(), now());
 
         /* Doorkeeper records
            While the `read:me` scope was technically not valid in 3.3.0,

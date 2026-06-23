@@ -43,8 +43,8 @@ class MediaAttachment < ApplicationRecord
   MAX_DESCRIPTION_LENGTH = 10_000
   MAX_DESCRIPTION_HARD_LENGTH_LIMIT = 10_000
 
-  IMAGE_LIMIT = 16.megabytes
-  VIDEO_LIMIT = 99.megabytes
+  IMAGE_LIMIT = (ENV['MAX_IMAGE_SIZE'] || 16.megabytes).to_i
+  VIDEO_LIMIT = (ENV['MAX_VIDEO_SIZE'] || 99.megabytes).to_i
 
   MAX_VIDEO_MATRIX_LIMIT = 8_294_400 # 3840x2160px
   MAX_VIDEO_FRAME_RATE   = 120
@@ -63,9 +63,9 @@ class MediaAttachment < ApplicationRecord
 
   IMAGE_MIME_TYPES             = %w(image/jpeg image/png image/gif image/heic image/heif image/webp image/avif).freeze
   IMAGE_CONVERTIBLE_MIME_TYPES = %w(image/heic image/heif image/avif).freeze
-  VIDEO_MIME_TYPES             = %w(video/webm video/mp4 video/quicktime video/ogg).freeze
-  VIDEO_CONVERTIBLE_MIME_TYPES = %w(video/webm video/quicktime).freeze
-  AUDIO_MIME_TYPES             = %w(audio/wave audio/wav audio/x-wav audio/x-pn-wave audio/vnd.wave audio/ogg audio/vorbis audio/mpeg audio/mp3 audio/webm audio/flac audio/aac audio/m4a audio/x-m4a audio/mp4 audio/3gpp video/x-ms-asf).freeze
+  VIDEO_MIME_TYPES             = %w(video/webm video/mp4 video/quicktime video/ogg audio/webm).freeze
+  VIDEO_CONVERTIBLE_MIME_TYPES = %w(video/quicktime).freeze
+  AUDIO_MIME_TYPES             = %w(audio/wave audio/wav audio/x-wav audio/x-pn-wave audio/vnd.wave audio/ogg audio/vorbis audio/mpeg audio/mp3 audio/flac audio/aac audio/m4a audio/x-m4a audio/mp4 audio/3gpp video/x-ms-asf audio/opus).freeze
 
   BLURHASH_OPTIONS = {
     x_comp: 4,

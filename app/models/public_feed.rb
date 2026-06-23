@@ -6,8 +6,10 @@ class PublicFeed
   # @option [Boolean] :with_replies
   # @option [Boolean] :with_reblogs
   # @option [Boolean] :local
+  # @option [Boolean] :bubble
   # @option [Boolean] :remote
   # @option [Boolean] :only_media
+  # @option [Boolean] :allow_local_only
   def initialize(account, options = {})
     @account = account
     @options = options
@@ -23,9 +25,11 @@ class PublicFeed
 
     scope = public_scope
 
+    scope.merge!(without_local_only_scope) unless allow_local_only?
     scope.merge!(without_replies_scope) unless with_replies?
     scope.merge!(without_reblogs_scope) unless with_reblogs?
     scope.merge!(local_only_scope) if local_only?
+    scope.merge!(bubble_only_scope) if bubble_only?
     scope.merge!(remote_only_scope) if remote_only?
     scope.merge!(account_filters_scope) if account?
     scope.merge!(media_only_scope) if media_only?
@@ -38,8 +42,12 @@ class PublicFeed
 
   attr_reader :account, :options
 
+  def allow_local_only?
+    local_account? && (local_only? || options[:allow_local_only])
+  end
+
   def incompatible_feed_settings?
-    (local_only? && !user_has_access_to_feed?(local_feed_setting)) || (remote_only? && !user_has_access_to_feed?(remote_feed_setting))
+    (local_only? && !user_has_access_to_feed?(local_feed_setting)) || (bubble_only? && !user_has_access_to_feed?(bubble_feed_setting)) || (remote_only? && !user_has_access_to_feed?(remote_feed_setting))
   end
 
   def user_has_access_to_feed?(setting)
@@ -65,20 +73,32 @@ class PublicFeed
     Setting.local_live_feed_access
   end
 
+  def bubble_feed_setting
+    Setting.bubble_live_feed_access
+  end
+
   def remote_feed_setting
     Setting.remote_live_feed_access
   end
 
   def local_only?
-    (options[:local] && !options[:remote]) || !user_has_access_to_feed?(remote_feed_setting)
+    (options[:local] && !options[:remote] && !options[:bubble]) || (!user_has_access_to_feed?(remote_feed_setting) || !user_has_access_to_feed?(bubble_feed_setting))
+  end
+
+  def bubble_only?
+    (options[:bubble] && !options[:local] && !options[:remote]) || (!user_has_access_to_feed?(local_feed_setting) && !user_has_access_to_feed?(remote_feed_setting))
   end
 
   def remote_only?
-    (options[:remote] && !options[:local]) || !user_has_access_to_feed?(local_feed_setting)
+    (options[:remote] && !options[:local] && !options[:bubble]) || !user_has_access_to_feed?(local_feed_setting)
   end
 
   def account?
     account.present?
+  end
+
+  def local_account?
+    account&.local?
   end
 
   def media_only?
@@ -91,6 +111,10 @@ class PublicFeed
 
   def local_only_scope
     Status.local
+  end
+
+  def bubble_only_scope
+    Status.bubble
   end
 
   def remote_only_scope
@@ -109,13 +133,17 @@ class PublicFeed
     Status.joins(:media_attachments).group(:id)
   end
 
+  def without_local_only_scope
+    Status.not_local_only
+  end
+
   def language_scope
     Status.where(language: account.chosen_languages)
   end
 
   def account_filters_scope
     Status.not_excluded_by_account(account).tap do |scope|
-      scope.merge!(Status.not_domain_blocked_by_account(account)) unless local_only?
+      scope.merge!(Status.not_domain_blocked_by_account(account, bubble_only?)) unless local_only?
     end
   end
 end

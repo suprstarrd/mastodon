@@ -11,7 +11,7 @@
   = render 'og_description', account: @account
   = render 'og_image', report: @generated_annual_report
 
-  = vite_typescript_tag 'wrapstodon.tsx', crossorigin: 'anonymous'
+  = flavoured_vite_typescript_tag 'wrapstodon.tsx', crossorigin: 'anonymous'
 
 - content_for :force_color_scheme, 'dark'
 

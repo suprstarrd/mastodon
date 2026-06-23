@@ -7,7 +7,7 @@ RSpec.describe ThemeHelper do
     let(:result) { helper.theme_style_tags(theme) }
 
     context 'when using "default" theme' do
-      let(:theme) { 'default' }
+      let(:theme) { ['glitch', 'default'] }
 
       it 'returns the default stylesheet' do
         expect(html_links.last.attributes.symbolize_keys)
@@ -105,22 +105,22 @@ RSpec.describe ThemeHelper do
 
     context 'when user is not signed in' do
       context 'when theme was not changed in settings' do
-        it { is_expected.to eq('default') }
+        it { is_expected.to eq(['glitch', 'default']) }
       end
 
       context 'when theme is changed in settings' do
         before do
-          allow(Themes.instance).to receive(:names).and_return(%w(default contrast))
-          Setting.theme = 'contrast'
+          allow(Themes.instance).to receive(:skins_for).with('glitch').and_return(%w(default contrast))
+          Setting.skin = 'contrast'
         end
 
-        it { is_expected.to eq('contrast') }
+        it { is_expected.to eq(['glitch', 'contrast']) }
       end
 
       context 'when theme is changed to invalid value' do
-        before { Setting.theme = 'fakethemename' }
+        before { Setting.skin = 'fakethemename' }
 
-        it { is_expected.to eq('default') }
+        it { is_expected.to eq(['glitch', 'default']) }
       end
     end
 
@@ -130,20 +130,14 @@ RSpec.describe ThemeHelper do
       let(:current_user) { Fabricate :user }
 
       context 'when user did not set theme' do
-        it { is_expected.to eq('default') }
+        it { is_expected.to eq(['glitch', 'default']) }
       end
 
       context 'when user set theme' do
-        before { current_user.settings.update(theme: 'alternate', noindex: false) }
-
-        context 'when theme is valid' do
-          before { allow(Themes.instance).to receive(:names).and_return %w(default alternate good evil) }
-
-          it { is_expected.to eq('alternate') }
-        end
+        before { current_user.settings.update(skin: 'alternate', noindex: false) }
 
         context 'when theme is not valid' do
-          it { is_expected.to eq('default') }
+          it { is_expected.to eq(['glitch', 'default']) }
         end
       end
     end

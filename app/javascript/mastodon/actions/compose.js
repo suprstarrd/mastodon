@@ -280,7 +280,9 @@ export function submitCompose(successCallback) {
 
       if (statusId === null && response.data.in_reply_to_id === null && response.data.visibility === 'public') {
         insertIfOnline('community');
-        insertIfOnline('public');
+        if (!response.data.local_only) {
+          insertIfOnline('public');
+        }
         insertIfOnline(`account:${response.data.account.id}`);
       }
 

@@ -8,17 +8,20 @@ class REST::StatusSerializer < ActiveModel::Serializer
   attributes :id, :created_at, :in_reply_to_id, :in_reply_to_account_id,
              :sensitive, :spoiler_text, :visibility, :language,
              :uri, :url, :replies_count, :reblogs_count,
-             :favourites_count, :quotes_count, :edited_at
+             :favourites_count, :reactions_count, :quotes_count, :edited_at,
+             :conversation_id
 
   attribute :favourited, if: :current_user?
   attribute :reblogged, if: :current_user?
   attribute :muted, if: :current_user?
   attribute :bookmarked, if: :current_user?
   attribute :pinned, if: :pinnable?
+  attribute :local_only, if: :local?
   has_many :filtered, serializer: REST::FilterResultSerializer, if: :current_user?
 
   attribute :content, unless: :source_requested?
   attribute :text, if: :source_requested?
+  attribute :content_type, if: :source_requested?
 
   belongs_to :reblog, serializer: REST::StatusSerializer
   belongs_to :application, if: :show_application?
@@ -28,6 +31,7 @@ class REST::StatusSerializer < ActiveModel::Serializer
   has_many :ordered_mentions, key: :mentions
   has_many :tags
   has_many :emojis, serializer: REST::CustomEmojiSerializer
+  has_many :reactions, serializer: REST::StatusReactionSerializer
   has_many :tagged_collections, serializer: REST::CollectionSerializer
 
   # Due to a ActiveModel::Serializer quirk, if you change any of the following, have a look at
@@ -36,6 +40,8 @@ class REST::StatusSerializer < ActiveModel::Serializer
   has_one :preview_card, key: :card, serializer: REST::PreviewCardSerializer
   has_one :preloadable_poll, key: :poll, serializer: REST::PollSerializer
   has_one :quote_approval
+
+  delegate :local?, to: :object
 
   def quote
     object.quote if object.quote&.acceptable?
@@ -98,6 +104,10 @@ class REST::StatusSerializer < ActiveModel::Serializer
 
   def favourites_count
     object.untrusted_favourites_count || relationships&.attributes_map&.dig(object.id, :favourites_count) || object.favourites_count
+  end
+
+  def reactions_count
+    relationships&.attributes_map&.dig(object.id, :reactions_count) || object.reactions_count
   end
 
   def quotes_count
@@ -165,6 +175,14 @@ class REST::StatusSerializer < ActiveModel::Serializer
 
   def ordered_mentions
     object.active_mentions.to_a.sort_by(&:id)
+  end
+
+  def reactions
+    if relationships && current_user?
+      relationships.reactions_map[object.id] || []
+    else
+      object.reactions(current_user&.account&.id)
+    end
   end
 
   def tagged_collections

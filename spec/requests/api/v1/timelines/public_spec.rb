@@ -36,6 +36,12 @@ RSpec.describe 'Public' do
     context 'when the instance allows public preview' do
       let(:expected_statuses) { [local_status, remote_status, media_status] }
 
+      before do
+        Setting.local_live_feed_access = 'public'
+        Setting.remote_live_feed_access = 'public'
+        Setting.bubble_live_feed_access = 'public'
+      end
+
       it_behaves_like 'forbidden for wrong scope', 'profile'
 
       context 'with an authorized user' do
@@ -98,7 +104,7 @@ RSpec.describe 'Public' do
 
     context 'when the instance does not allow public preview' do
       before do
-        Form::AdminSettings.new(local_live_feed_access: 'authenticated', remote_live_feed_access: 'authenticated').save
+        Form::AdminSettings.new(local_live_feed_access: 'authenticated', remote_live_feed_access: 'authenticated', bubble_live_feed_access: 'authenticated').save
       end
 
       it_behaves_like 'forbidden for wrong scope', 'profile'

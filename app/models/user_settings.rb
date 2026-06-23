@@ -9,16 +9,21 @@ class UserSettings
 
   setting :always_send_emails, default: false
   setting :aggregate_reblogs, default: true
-  setting :theme, default: -> { ::Setting.theme }
+  setting :flavour, default: -> { ::Setting.flavour }
+  setting :skin, default: -> { ::Setting.skin }
   setting :noindex, default: -> { ::Setting.noindex }
   setting :show_application, default: true
   setting :default_language, default: nil
   setting :default_sensitive, default: false
   setting :default_privacy, default: nil, in: %w(public unlisted private)
+  setting :default_content_type, default: -> { ::Setting.default_content_type }
+  setting :hide_followers_count, default: false
+  setting :visible_reactions, default: 6
   setting :default_quote_policy, default: 'public', in: %w(public followers nobody)
   setting :email_subscriptions, default: false
 
   setting_inverse_alias :indexable, :noindex
+  setting_inverse_alias :show_followers_count, :hide_followers_count
 
   namespace :web do
     setting :advanced_layout, default: false
@@ -31,6 +36,7 @@ class UserSettings
     setting :disable_hover_cards, default: false
     setting :delete_modal, default: true
     setting :reblog_modal, default: false
+    setting :favourite_modal, default: false
     setting :quick_boosting, default: false
     setting :missing_alt_text_modal, default: true
     setting :reduce_motion, default: false
@@ -46,12 +52,15 @@ class UserSettings
     setting :follow, default: true
     setting :reblog, default: false
     setting :favourite, default: false
+    setting :reaction, default: false
     setting :mention, default: true
     setting :quote, default: true
     setting :follow_request, default: true
     setting :report, default: true
     setting :pending_account, default: true
     setting :trends, default: true
+    setting :link_trends, default: false
+    setting :status_trends, default: false
     setting :appeal, default: true
     setting :software_updates, default: 'critical', in: %w(none critical patch all)
   end

@@ -3,6 +3,7 @@
 class StatusPolicy < ApplicationPolicy
   def show?
     return false if author.unavailable?
+    return false if local_only? && (current_account.nil? || !current_account.local?)
 
     if requires_mention?
       owned? || mention_exists?
@@ -22,6 +23,10 @@ class StatusPolicy < ApplicationPolicy
   end
 
   def favourite?
+    show? && !blocking_author?
+  end
+
+  def react?
     show? && !blocking_author?
   end
 
@@ -85,5 +90,9 @@ class StatusPolicy < ApplicationPolicy
 
   def author
     record.account
+  end
+
+  def local_only?
+    record.local_only?
   end
 end

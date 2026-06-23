@@ -30,7 +30,7 @@ RSpec.describe 'Settings Pictures' do
             .to redirect_to(settings_profile_path)
             .and have_http_status(303)
           expect(service)
-            .to have_received(:call).with(user.account, { 'avatar' => nil, 'avatar_remote_url' => '' })
+            .to have_received(:call).with(user.account, { 'avatar' => nil, 'avatar_remote_url' => '', 'avatar_description' => '' })
         end
       end
 
